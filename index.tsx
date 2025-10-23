@@ -228,9 +228,14 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, allVocabulary, title, onToggleF
     setQuizKey(k => k + 1);
   }, []);
   
-  // This effect builds the quiz "snapshot". It runs only when the quiz type changes (title)
-  // or the user explicitly starts a new quiz (quizKey). It no longer depends on the main
-  // vocabulary list, preventing resets when a favorite is toggled.
+  // Memoize the stringified list of IDs. This creates a stable dependency for the
+  // quiz generation effect. The effect will only re-run if the actual set of words
+  // changes, not when a 'isFavorite' status is toggled.
+  const vocabularyIds = useMemo(() => JSON.stringify(vocabulary.map(item => item.id).sort()), [vocabulary]);
+  const allVocabularyIds = useMemo(() => JSON.stringify(allVocabulary.map(item => item.id).sort()), [allVocabulary]);
+
+  // This effect builds the quiz "snapshot". It runs only when the quiz type changes (title),
+  // the user explicitly starts a new quiz (quizKey), or the underlying word list changes.
   useEffect(() => {
     if (vocabulary.length < 3) {
         setQuizContent(null);
@@ -242,7 +247,6 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, allVocabulary, title, onToggleF
     const choicesMap: Record<string, VocabularyItem[]> = {};
 
     for (const question of questionsForQuiz) {
-        // Fix: Use the full vocabulary list for richer incorrect choices
         const incorrectAnswers = allVocabulary.filter(item => item.id !== question.id);
         const shuffledIncorrect = shuffleArray(incorrectAnswers);
         choicesMap[question.id] = shuffleArray([question, ...shuffledIncorrect.slice(0, 2)]);
@@ -256,7 +260,7 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, allVocabulary, title, onToggleF
     setSelectedAnswerId(null);
     setIsAnswered(false);
     setIsFinished(false);
-  }, [title, quizKey, vocabulary, allVocabulary]);
+  }, [title, quizKey, vocabularyIds, allVocabularyIds]);
 
   const currentQuestionId = quizContent?.questionIds[currentQuestionIndex];
 
@@ -548,17 +552,21 @@ const App: React.FC = () => {
         if (Array.isArray(parsedData)) {
           // This type guard validates that each object from storage has the required properties.
           // This is a safer way to handle data from an external source like localStorage.
-          // Fix: Enhance validation to check optional 'isFavorite' property.
-          const validatedData = parsedData.filter((item: any): item is VocabularyItem => 
-            item &&
-            typeof item.id === 'string' &&
-            typeof item.vietnamese === 'string' &&
-            typeof item.chinese === 'string' &&
-            typeof item.pinyin === 'string' &&
-            typeof item.phonetic === 'string' &&
-            typeof item.hanViet === 'string' &&
-            (!('isFavorite' in item) || typeof item.isFavorite === 'boolean')
-          );
+          // Fix: Use a type-safe validation guard to safely parse vocabulary data from localStorage without using 'any', resolving type errors.
+          const validatedData = parsedData.filter((item: unknown): item is VocabularyItem => {
+            if (typeof item !== 'object' || item === null) return false;
+
+            const potentialItem = item as Record<string, unknown>;
+            return (
+              typeof potentialItem.id === 'string' &&
+              typeof potentialItem.vietnamese === 'string' &&
+              typeof potentialItem.chinese === 'string' &&
+              typeof potentialItem.pinyin === 'string' &&
+              typeof potentialItem.phonetic === 'string' &&
+              typeof potentialItem.hanViet === 'string' &&
+              (!('isFavorite' in potentialItem) || typeof potentialItem.isFavorite === 'boolean')
+            );
+          });
 
           setVocabulary(validatedData);
           if (validatedData.length > 0) {
