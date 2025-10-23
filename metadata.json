@@ -1,0 +1,5 @@
+{
+  "name": "Vocabulary Builder",
+  "description": "An application to help users memorize new vocabulary through a quiz-based learning interface. Users can input their vocabulary lists and then practice with multiple-choice questions.",
+  "requestFramePermissions": []
+}
