@@ -1,74 +1,70 @@
-// Fix: Add React and ReactDOM imports for type checking.
-// In a real browser/Babel environment, these would be global.
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-
-// This is a standalone script processed by Babel in the browser.
+// This standalone script is processed by Babel in the browser.
 // React and ReactDOM are loaded from a CDN and are available as global variables.
 
 // --- TYPES ---
-interface VocabularyItem {
-  id: string;
-  vietnamese: string;
-  chinese: string;
-  pinyin: string;
-  phonetic: string;
-  hanViet: string;
-  isFavorite?: boolean;
-}
+/**
+ * @typedef {Object} VocabularyItem
+ * @property {string} id
+ * @property {string} vietnamese
+ * @property {string} chinese
+ * @property {string} pinyin
+ * @property {string} phonetic
+ * @property {string} hanViet
+ * @property {boolean=} isFavorite
+ */
 
 
 // --- ICONS ---
 
-const PlusIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const PlusIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
   </svg>
 );
 
-const LearnIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const LearnIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
   </svg>
 );
 
-const ManageIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const ManageIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h7.5M8.25 12h7.5m-7.5 5.25h7.5M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
   </svg>
 );
 
-const ChevronDownIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const ChevronDownIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
   </svg>
 );
 
-const CheckIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const CheckIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
   </svg>
 );
 
-const XIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const XIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
   </svg>
 );
 
-const EditIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const EditIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
   </svg>
 );
 
-const DeleteIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+const DeleteIcon = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.067-2.09 1.02-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
   </svg>
 );
 
-const StarIcon: React.FC<React.SVGProps<SVGSVGElement> & { isFavorite: boolean }> = ({ isFavorite, ...props }) => (
+const StarIcon = ({ isFavorite, ...props }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill={isFavorite ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
     </svg>
@@ -77,10 +73,11 @@ const StarIcon: React.FC<React.SVGProps<SVGSVGElement> & { isFavorite: boolean }
 
 // --- COMPONENTS ---
 
-interface VocabularyInputProps {
-  onSave: (items: VocabularyItem[]) => void;
-  existingVocabulary: VocabularyItem[];
-}
+/**
+ * @typedef {Object} VocabularyInputProps
+ * @property {(items: VocabularyItem[]) => void} onSave
+ * @property {VocabularyItem[]} existingVocabulary
+ */
 
 const PLACEHOLDER_TEXT = `Paste your vocabulary here. Each line should have 5 parts separated by tabs.
 Example:
@@ -88,11 +85,11 @@ Ngân hàng	银行	yínháng	dính háng	ngân hàng
 Bưu điện	邮局	yóujú	dấu chú	bưu cục
 ...`;
 
-const VocabularyInput: React.FC<VocabularyInputProps> = ({ onSave, existingVocabulary }) => {
+const VocabularyInput = ({ onSave, existingVocabulary }) => {
   const { useState } = React;
   const [text, setText] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
   const handleParseAndSave = () => {
     setError(null);
@@ -103,7 +100,7 @@ const VocabularyInput: React.FC<VocabularyInputProps> = ({ onSave, existingVocab
     }
 
     const lines = text.trim().split('\n');
-    const newItems: VocabularyItem[] = [];
+    const newItems = [];
     let lineError = false;
     const existingVietnameseWords = new Set(existingVocabulary.map(item => item.vietnamese));
     let skippedCount = 0;
@@ -194,14 +191,15 @@ const VocabularyInput: React.FC<VocabularyInputProps> = ({ onSave, existingVocab
 };
 
 
-interface QuizProps {
-  vocabulary: VocabularyItem[];
-  allVocabulary: VocabularyItem[];
-  title: string;
-  onToggleFavorite: (id: string) => void;
-}
+/**
+ * @typedef {Object} QuizProps
+ * @property {VocabularyItem[]} vocabulary
+ * @property {VocabularyItem[]} allVocabulary
+ * @property {string} title
+ * @property {(id: string) => void} onToggleFavorite
+ */
 
-const shuffleArray = <T,>(array: T[]): T[] => {
+const shuffleArray = (array) => {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -210,16 +208,16 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return newArray;
 };
 
-const Quiz: React.FC<QuizProps> = ({ vocabulary, allVocabulary, title, onToggleFavorite }) => {
+const Quiz = ({ vocabulary, allVocabulary, title, onToggleFavorite }) => {
   const { useState, useEffect, useMemo, useCallback } = React;
   
   // State for the quiz's structure (snapshot)
-  const [quizContent, setQuizContent] = useState<{ questionIds: string[]; choicesMap: Record<string, VocabularyItem[]> } | null>(null);
+  const [quizContent, setQuizContent] = useState(null);
 
   // State for the user's progress through the quiz
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
+  const [selectedAnswerId, setSelectedAnswerId] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [quizKey, setQuizKey] = useState(0);
@@ -244,7 +242,7 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, allVocabulary, title, onToggleF
 
     const questionsForQuiz = shuffleArray(vocabulary).slice(0, Math.min(10, vocabulary.length));
     const questionIds = questionsForQuiz.map(item => item.id);
-    const choicesMap: Record<string, VocabularyItem[]> = {};
+    const choicesMap = {};
 
     for (const question of questionsForQuiz) {
         const incorrectAnswers = allVocabulary.filter(item => item.id !== question.id);
@@ -294,7 +292,7 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, allVocabulary, title, onToggleF
     }
   };
 
-  const handleAnswer = (selectedId: string) => {
+  const handleAnswer = (selectedId) => {
     if (isAnswered) return;
     
     setSelectedAnswerId(selectedId);
@@ -337,7 +335,7 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, allVocabulary, title, onToggleF
     );
   }
   
-  const getChoiceClass = (choiceId: string) => {
+  const getChoiceClass = (choiceId) => {
       if (!isAnswered) {
           return 'bg-white hover:bg-indigo-50 border-slate-300';
       }
@@ -403,19 +401,20 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, allVocabulary, title, onToggleF
 };
 
 
-interface VocabularyManagerProps {
-  vocabulary: VocabularyItem[];
-  onUpdate: (item: VocabularyItem) => void;
-  onDelete: (id: string) => void;
-  onToggleFavorite: (id: string) => void;
-}
+/**
+ * @typedef {Object} VocabularyManagerProps
+ * @property {VocabularyItem[]} vocabulary
+ * @property {(item: VocabularyItem) => void} onUpdate
+ * @property {(id: string) => void} onDelete
+ * @property {(id: string) => void} onToggleFavorite
+ */
 
-const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpdate, onDelete, onToggleFavorite }) => {
+const VocabularyManager = ({ vocabulary, onUpdate, onDelete, onToggleFavorite }) => {
   const { useState } = React;
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editedItem, setEditedItem] = useState<VocabularyItem | null>(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editedItem, setEditedItem] = useState(null);
 
-  const handleEdit = (item: VocabularyItem) => {
+  const handleEdit = (item) => {
     setEditingId(item.id);
     setEditedItem({ ...item });
   };
@@ -432,25 +431,25 @@ const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpd
     handleCancel();
   };
 
-  const handleDelete = (id: string, vietnamese: string) => {
+  const handleDelete = (id, vietnamese) => {
     if (window.confirm(`Are you sure you want to delete "${vietnamese}"?`)) {
       onDelete(id);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e) => {
     if (editedItem) {
       setEditedItem({ ...editedItem, [e.target.name]: e.target.value });
     }
   };
 
-  const renderCell = (field: keyof VocabularyItem, item: VocabularyItem) => {
+  const renderCell = (field, item) => {
     if (editingId === item.id && editedItem && typeof editedItem[field] === 'string') {
       return (
         <input
           type="text"
           name={field}
-          value={editedItem[field] as string}
+          value={editedItem[field]}
           onChange={handleInputChange}
           className="w-full bg-slate-50 border border-indigo-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
         />
@@ -527,19 +526,28 @@ const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpd
 
 // --- MAIN APP COMPONENT ---
 
-type View = 'add' | 'learn' | 'manage';
-type QuizScope = 'recent' | 'all' | 'favorites';
+const VIEWS = {
+  ADD: 'add',
+  LEARN: 'learn',
+  MANAGE: 'manage',
+};
+
+const QUIZ_SCOPES = {
+  RECENT: 'recent',
+  ALL: 'all',
+  FAVORITES: 'favorites',
+};
 
 const VOCAB_STORAGE_KEY = 'vocabulary-builder-data';
 
-const App: React.FC = () => {
+const App = () => {
   const { useState, useCallback, useEffect, useRef, useMemo } = React;
-  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
-  const [view, setView] = useState<View>('add');
+  const [vocabulary, setVocabulary] = useState([]);
+  const [view, setView] = useState(VIEWS.ADD);
   const [isLearnDropdownOpen, setIsLearnDropdownOpen] = useState(false);
-  const [quizScope, setQuizScope] = useState<QuizScope | null>(null);
+  const [quizScope, setQuizScope] = useState(null);
 
-  const learnButtonRef = useRef<HTMLDivElement>(null);
+  const learnButtonRef = useRef(null);
   
   const favoriteWords = useMemo(() => vocabulary.filter(item => item.isFavorite), [vocabulary]);
 
@@ -548,15 +556,12 @@ const App: React.FC = () => {
     try {
       const storedData = localStorage.getItem(VOCAB_STORAGE_KEY);
       if (storedData) {
-        const parsedData: unknown = JSON.parse(storedData);
+        const parsedData = JSON.parse(storedData);
         if (Array.isArray(parsedData)) {
-          // This type guard validates that each object from storage has the required properties.
-          // This is a safer way to handle data from an external source like localStorage.
-          // Fix: Use a type-safe validation guard to safely parse vocabulary data from localStorage without using 'any', resolving type errors.
-          const validatedData = parsedData.filter((item: unknown): item is VocabularyItem => {
+          const validatedData = parsedData.filter((item) => {
             if (typeof item !== 'object' || item === null) return false;
 
-            const potentialItem = item as Record<string, unknown>;
+            const potentialItem = item;
             return (
               typeof potentialItem.id === 'string' &&
               typeof potentialItem.vietnamese === 'string' &&
@@ -570,9 +575,9 @@ const App: React.FC = () => {
 
           setVocabulary(validatedData);
           if (validatedData.length > 0) {
-            setView(validatedData.length >= 3 ? 'learn' : 'add');
+            setView(validatedData.length >= 3 ? VIEWS.LEARN : VIEWS.ADD);
             if (validatedData.length >= 3) {
-              setQuizScope('all'); // Default to all if starting on learn view
+              setQuizScope(QUIZ_SCOPES.ALL); // Default to all if starting on learn view
             }
           }
         }
@@ -583,8 +588,8 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-        if (learnButtonRef.current && !learnButtonRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (event) => {
+        if (learnButtonRef.current && !learnButtonRef.current.contains(event.target)) {
             setIsLearnDropdownOpen(false);
         }
     };
@@ -594,7 +599,7 @@ const App: React.FC = () => {
     };
   }, []);
 
-  const persistVocabulary = (vocab: VocabularyItem[]) => {
+  const persistVocabulary = (vocab) => {
     try {
       localStorage.setItem(VOCAB_STORAGE_KEY, JSON.stringify(vocab));
     } catch (error) {
@@ -602,34 +607,34 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSaveVocabulary = useCallback((newItems: VocabularyItem[]) => {
+  const handleSaveVocabulary = useCallback((newItems) => {
     setVocabulary(prevVocabulary => {
       const updatedVocabulary = [...prevVocabulary, ...newItems];
       persistVocabulary(updatedVocabulary);
       if (updatedVocabulary.length >= 3) {
-        setView('learn');
-        setQuizScope('recent');
+        setView(VIEWS.LEARN);
+        setQuizScope(QUIZ_SCOPES.RECENT);
       }
       return updatedVocabulary;
     });
   }, []);
 
-  const handleDeleteVocabularyItem = useCallback((idToDelete: string) => {
+  const handleDeleteVocabularyItem = useCallback((idToDelete) => {
     setVocabulary(prevVocabulary => {
       const updatedVocabulary = prevVocabulary.filter(item => item.id !== idToDelete);
       persistVocabulary(updatedVocabulary);
-      if (updatedVocabulary.length < 3 && view === 'learn') {
-        setView('add');
+      if (updatedVocabulary.length < 3 && view === VIEWS.LEARN) {
+        setView(VIEWS.ADD);
         setQuizScope(null);
       }
-      if (updatedVocabulary.length === 0 && view === 'manage') {
-        setView('add');
+      if (updatedVocabulary.length === 0 && view === VIEWS.MANAGE) {
+        setView(VIEWS.ADD);
       }
       return updatedVocabulary;
     });
   }, [view]);
 
-  const handleUpdateVocabularyItem = useCallback((updatedItem: VocabularyItem) => {
+  const handleUpdateVocabularyItem = useCallback((updatedItem) => {
     setVocabulary(prevVocabulary => {
       const updatedVocabulary = prevVocabulary.map(item =>
         item.id === updatedItem.id ? updatedItem : item
@@ -638,8 +643,8 @@ const App: React.FC = () => {
       return updatedVocabulary;
     });
   }, []);
-  
-  const handleToggleFavorite = useCallback((idToToggle: string) => {
+
+  const handleToggleFavorite = useCallback((idToToggle) => {
     setVocabulary(prevVocabulary => {
         const updatedVocabulary = prevVocabulary.map(item =>
             item.id === idToToggle ? { ...item, isFavorite: !item.isFavorite } : item
@@ -649,9 +654,9 @@ const App: React.FC = () => {
     });
   }, []);
 
-  const handleStartQuiz = (scope: QuizScope) => {
+  const handleStartQuiz = (scope) => {
     setQuizScope(scope);
-    setView('learn');
+    setView(VIEWS.LEARN);
     setIsLearnDropdownOpen(false);
   };
 
@@ -661,9 +666,9 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch(view) {
-      case 'add':
+      case VIEWS.ADD:
         return <VocabularyInput onSave={handleSaveVocabulary} existingVocabulary={vocabulary} />;
-      case 'learn':
+      case VIEWS.LEARN:
         if (!quizScope || !hasEnoughVocabularyForQuiz) {
           return (
             <div className="text-center p-8 bg-white rounded-lg shadow-lg">
@@ -673,7 +678,7 @@ const App: React.FC = () => {
             </div>
           );
         }
-        if (quizScope === 'favorites' && !canStartFavoriteQuiz) {
+        if (quizScope === QUIZ_SCOPES.FAVORITES && !canStartFavoriteQuiz) {
              return (
                 <div className="text-center p-8 bg-white rounded-lg shadow-lg">
                   <h2 className="text-2xl font-bold text-slate-700 mb-4">Not Enough Favorite Words</h2>
@@ -682,18 +687,18 @@ const App: React.FC = () => {
                 </div>
               );
         }
-        const quizTitle = quizScope === 'recent' 
-            ? 'Quiz: Recent 30 Words' 
-            : quizScope === 'favorites'
+        const quizTitle = quizScope === QUIZ_SCOPES.RECENT
+            ? 'Quiz: Recent 30 Words'
+            : quizScope === QUIZ_SCOPES.FAVORITES
                 ? 'Quiz: Favorite Words'
                 : 'Quiz: All Words';
-        const quizVocab = quizScope === 'recent' 
-            ? vocabulary.slice(-30) 
-            : quizScope === 'favorites'
+        const quizVocab = quizScope === QUIZ_SCOPES.RECENT
+            ? vocabulary.slice(-30)
+            : quizScope === QUIZ_SCOPES.FAVORITES
                 ? favoriteWords
                 : vocabulary;
         return <Quiz vocabulary={quizVocab} allVocabulary={vocabulary} title={quizTitle} onToggleFavorite={handleToggleFavorite} />;
-      case 'manage':
+      case VIEWS.MANAGE:
         return hasAnyVocabulary ? (
           <VocabularyManager
             vocabulary={vocabulary}
@@ -723,9 +728,9 @@ const App: React.FC = () => {
           </h1>
           <nav className="flex space-x-2">
             <button
-              onClick={() => setView('add')}
+              onClick={() => setView(VIEWS.ADD)}
               className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                view === 'add'
+                view === VIEWS.ADD
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'bg-white text-slate-600 hover:bg-slate-100'
               }`}
@@ -738,7 +743,7 @@ const App: React.FC = () => {
                 onClick={() => hasEnoughVocabularyForQuiz && setIsLearnDropdownOpen(prev => !prev)}
                 disabled={!hasEnoughVocabularyForQuiz}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    view === 'learn'
+                    view === VIEWS.LEARN
                     ? 'bg-indigo-600 text-white shadow-sm'
                     : 'bg-white text-slate-600 hover:bg-slate-100'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -751,20 +756,20 @@ const App: React.FC = () => {
                 {isLearnDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-10 ring-1 ring-black ring-opacity-5">
                         <button
-                            onClick={() => handleStartQuiz('recent')}
+                            onClick={() => handleStartQuiz(QUIZ_SCOPES.RECENT)}
                             className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
                         >
                             Recent 30 Words
                         </button>
                         <button
-                            onClick={() => handleStartQuiz('all')}
+                            onClick={() => handleStartQuiz(QUIZ_SCOPES.ALL)}
                             className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
                         >
                             All Words
                         </button>
                         <div className="border-t border-slate-200 my-1"></div>
                         <button
-                            onClick={() => handleStartQuiz('favorites')}
+                            onClick={() => handleStartQuiz(QUIZ_SCOPES.FAVORITES)}
                             disabled={!canStartFavoriteQuiz}
                             className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                              title={!canStartFavoriteQuiz ? "You need at least 3 favorite words to start this quiz" : "Quiz with only your favorite words"}
@@ -775,10 +780,10 @@ const App: React.FC = () => {
                 )}
             </div>
             <button
-              onClick={() => hasAnyVocabulary && setView('manage')}
+              onClick={() => hasAnyVocabulary && setView(VIEWS.MANAGE)}
               disabled={!hasAnyVocabulary}
               className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                view === 'manage'
+                view === VIEWS.MANAGE
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'bg-white text-slate-600 hover:bg-slate-100'
               } disabled:opacity-50 disabled:cursor-not-allowed`}
