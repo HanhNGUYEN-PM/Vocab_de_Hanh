@@ -1,7 +1,6 @@
-// Fix: Add React and ReactDOM imports for type checking.
-// In a real browser/Babel environment, these would be global.
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+// Fix: Provide global type declarations for React and ReactDOM when running without a bundler.
+declare const React: typeof import('react');
+declare const ReactDOM: typeof import('react-dom/client');
 
 // This is a standalone script processed by Babel in the browser.
 // React and ReactDOM are loaded from a CDN and are available as global variables.
