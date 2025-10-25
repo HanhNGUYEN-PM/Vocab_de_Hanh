@@ -1,222 +1,304 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { VocabularyItem } from './types';
-import VocabularyInput from './components/VocabularyInput';
-import Quiz from './components/Quiz';
-import VocabularyManager from './components/VocabularyManager';
-import PlusIcon from './components/icons/PlusIcon';
-import LearnIcon from './components/icons/LearnIcon';
-import ManageIcon from './components/icons/ManageIcon';
-import ChevronDownIcon from './components/icons/ChevronDownIcon';
+import { useMemo, useState } from 'react';
 
-type View = 'add' | 'learn' | 'manage';
-type QuizScope = 'recent' | 'all';
+const TOTAL_QUESTIONS = 10;
 
-const VOCAB_STORAGE_KEY = 'vocabulary-builder-data';
+const POSITIVE_MESSAGES = [
+  'Bravo, super héros des chiffres !',
+  'Yes ! Tu as dégainé la bonne réponse !',
+  'Génial, tu vises juste !',
+  'Tu progresses à la vitesse de la lumière !',
+  'Fantastique, tu domptes les multiplications !',
+] as const;
 
-const App: React.FC = () => {
-  const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([]);
-  const [view, setView] = useState<View>('add');
-  const [isLearnDropdownOpen, setIsLearnDropdownOpen] = useState(false);
-  const [quizScope, setQuizScope] = useState<QuizScope | null>(null);
+const ENCOURAGEMENT_MESSAGES = [
+  "Pas grave, on retente au prochain coup !",
+  'Respire un grand coup, tu vas y arriver !',
+  'Chaque erreur est un tremplin pour réussir !',
+  'Courage, tu deviens un pro des tables !',
+  'On continue, la victoire est proche !',
+] as const;
 
-  const learnButtonRef = useRef<HTMLDivElement>(null);
+const MOTIVATION_PROMPTS = [
+  '✨ Mission: devenir champion des multiplications !',
+  '🚀 Plus tu joues, plus ton cerveau muscle ses super-pouvoirs !',
+  '🎯 Un pas à la fois et tu connaîtras toutes les tables !',
+  '🧠 Ton cerveau brille, continue comme ça !',
+] as const;
 
-  useEffect(() => {
-    try {
-      const storedData = localStorage.getItem(VOCAB_STORAGE_KEY);
-      if (storedData) {
-        const parsedData = JSON.parse(storedData);
-        if (Array.isArray(parsedData)) {
-          setVocabulary(parsedData);
-          if (parsedData.length > 0) {
-            setView(parsedData.length >= 3 ? 'learn' : 'add');
-            if (parsedData.length >= 3) {
-              setQuizScope('all'); // Default to all if starting on learn view
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Failed to load vocabulary from local storage:", error);
-    }
-  }, []);
+type Question = {
+  factors: [number, number];
+  options: number[];
+  correctAnswer: number;
+};
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-        if (learnButtonRef.current && !learnButtonRef.current.contains(event.target as Node)) {
-            setIsLearnDropdownOpen(false);
-        }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
+type HistoryEntry = {
+  expression: string;
+  correctAnswer: number;
+  playerAnswer: number;
+  isCorrect: boolean;
+};
 
-  const persistVocabulary = (vocab: VocabularyItem[]) => {
-    try {
-      localStorage.setItem(VOCAB_STORAGE_KEY, JSON.stringify(vocab));
-    } catch (error) {
-      console.error("Failed to save vocabulary to local storage:", error);
-    }
-  };
+type LastResult = {
+  isCorrect: boolean;
+  message: string;
+  detail: string;
+};
 
-  const handleSaveVocabulary = useCallback((newItems: VocabularyItem[]) => {
-    setVocabulary(prevVocabulary => {
-      const updatedVocabulary = [...prevVocabulary, ...newItems];
-      persistVocabulary(updatedVocabulary);
-      if (updatedVocabulary.length >= 3) {
-        setView('learn');
-        setQuizScope('recent');
-      }
-      return updatedVocabulary;
-    });
-  }, []);
+const randomInt = (min: number, max: number): number =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
-  const handleDeleteVocabularyItem = useCallback((idToDelete: string) => {
-    setVocabulary(prevVocabulary => {
-      const updatedVocabulary = prevVocabulary.filter(item => item.id !== idToDelete);
-      persistVocabulary(updatedVocabulary);
-      if (updatedVocabulary.length < 3 && view === 'learn') {
-        setView('add');
-        setQuizScope(null);
-      }
-      if (updatedVocabulary.length === 0 && view === 'manage') {
-        setView('add');
-      }
-      return updatedVocabulary;
-    });
-  }, [view]);
+const shuffle = <T,>(items: T[]): T[] => {
+  const array = [...items];
+  for (let i = array.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
 
-  const handleUpdateVocabularyItem = useCallback((updatedItem: VocabularyItem) => {
-    setVocabulary(prevVocabulary => {
-      const updatedVocabulary = prevVocabulary.map(item =>
-        item.id === updatedItem.id ? updatedItem : item
-      );
-      persistVocabulary(updatedVocabulary);
-      return updatedVocabulary;
-    });
-  }, []);
-  
-  const handleStartQuiz = (scope: QuizScope) => {
-    setQuizScope(scope);
-    setView('learn');
-    setIsLearnDropdownOpen(false);
-  };
+const pick = <T,>(list: readonly T[]): T => list[randomInt(0, list.length - 1)];
 
-  const hasEnoughVocabularyForQuiz = vocabulary.length >= 3;
-  const hasAnyVocabulary = vocabulary.length > 0;
+const createQuestion = (): Question => {
+  const factorA = randomInt(2, 10);
+  const factorB = randomInt(2, 10);
+  const correctAnswer = factorA * factorB;
 
-  const renderContent = () => {
-    switch(view) {
-      case 'add':
-        return <VocabularyInput onSave={handleSaveVocabulary} existingVocabulary={vocabulary} />;
-      case 'learn':
-        if (!quizScope || !hasEnoughVocabularyForQuiz) {
-          return (
-            <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-              <h2 className="text-2xl font-bold text-slate-700 mb-4">Welcome!</h2>
-              <p className="text-slate-600">You need at least 3 vocabulary words to start a quiz.</p>
-              <p className="text-slate-600">Please go to the "Add Words" tab to add some.</p>
-            </div>
-          );
-        }
-        const quizTitle = quizScope === 'recent' ? 'Quiz: Recent 30 Words' : 'Quiz: All Words';
-        const quizVocab = quizScope === 'recent' ? vocabulary.slice(-30) : vocabulary;
-        return <Quiz vocabulary={quizVocab} title={quizTitle} />;
-      case 'manage':
-        return hasAnyVocabulary ? (
-          <VocabularyManager
-            vocabulary={vocabulary}
-            onUpdate={handleUpdateVocabularyItem}
-            onDelete={handleDeleteVocabularyItem}
-          />
-        ) : (
-          <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-            <h2 className="text-2xl font-bold text-slate-700 mb-4">No words to manage.</h2>
-            <p className="text-slate-600">Your vocabulary collection is empty.</p>
-            <p className="text-slate-600">Please go to the "Add Words" tab to add some.</p>
-          </div>
-        );
-      default:
-        return null;
+  const wrongAnswers = new Set<number>();
+  while (wrongAnswers.size < 2) {
+    const candidate = randomInt(2, 10) * randomInt(2, 10);
+    if (candidate !== correctAnswer) {
+      wrongAnswers.add(candidate);
     }
   }
 
+  const options = shuffle([correctAnswer, ...wrongAnswers]);
+  return {
+    factors: [factorA, factorB],
+    correctAnswer,
+    options,
+  };
+};
+
+const App: React.FC = () => {
+  const [currentQuestion, setCurrentQuestion] = useState<Question>(() => createQuestion());
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [score, setScore] = useState(0);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [quizFinished, setQuizFinished] = useState(false);
+  const [lastResult, setLastResult] = useState<LastResult | null>(null);
+  const [streak, setStreak] = useState(0);
+
+  const handleAnswer = (choice: number) => {
+    if (quizFinished) {
+      return;
+    }
+
+    const { factors, correctAnswer } = currentQuestion;
+    const [a, b] = factors;
+    const isCorrect = choice === correctAnswer;
+    const newTotalAnswered = questionsAnswered + 1;
+
+    setHistory(prev => [
+      ...prev,
+      {
+        expression: `${a} × ${b}`,
+        correctAnswer,
+        playerAnswer: choice,
+        isCorrect,
+      },
+    ]);
+
+    setScore(prev => prev + (isCorrect ? 1 : 0));
+    setStreak(prev => (isCorrect ? prev + 1 : 0));
+    setLastResult({
+      isCorrect,
+      message: isCorrect ? pick(POSITIVE_MESSAGES) : pick(ENCOURAGEMENT_MESSAGES),
+      detail: isCorrect
+        ? `${a} × ${b} = ${correctAnswer}`
+        : `La bonne réponse était ${correctAnswer}.`,
+    });
+
+    setQuestionsAnswered(newTotalAnswered);
+
+    if (newTotalAnswered >= TOTAL_QUESTIONS) {
+      setQuizFinished(true);
+    } else {
+      setCurrentQuestion(createQuestion());
+    }
+  };
+
+  const handleRestart = () => {
+    setCurrentQuestion(createQuestion());
+    setQuestionsAnswered(0);
+    setScore(0);
+    setHistory([]);
+    setQuizFinished(false);
+    setLastResult(null);
+    setStreak(0);
+  };
+
+  const progressPercent = quizFinished
+    ? 100
+    : Math.round((questionsAnswered / TOTAL_QUESTIONS) * 100);
+
+  const questionNumber = quizFinished ? TOTAL_QUESTIONS : questionsAnswered + 1;
+
+  const motivationMessage = useMemo(() => {
+    if (quizFinished) {
+      if (score === TOTAL_QUESTIONS) {
+        return '🌟 Score parfait ! Tu es le maître des multiplications !';
+      }
+      if (score >= 8) {
+        return '🏅 Impressionnant ! Encore une partie pour devenir imbattable ?';
+      }
+      if (score >= 5) {
+        return '💪 Beau travail ! Un petit entraînement de plus et tu seras au top.';
+      }
+      return '🔁 Chaque partie te rapproche du super-héros des maths !';
+    }
+
+    if (streak >= 3) {
+      return `🔥 ${streak} réponses justes d'affilée, quelle fusée !`;
+    }
+
+    switch (questionsAnswered) {
+      case 0:
+        return '🚀 Prêt pour une mission spéciale multiplications ?';
+      case 1:
+        return '🎉 Une de faite, continue comme ça !';
+      case 5:
+        return '🧠 Tu es déjà à mi-parcours, ne lâche rien !';
+      default:
+        return pick(MOTIVATION_PROMPTS);
+    }
+  }, [quizFinished, questionsAnswered, score, streak]);
+
+  const finalBadge = useMemo(() => {
+    const ratio = score / TOTAL_QUESTIONS;
+    if (ratio === 1) {
+      return '🏆 Capitaine Calcul Ultime';
+    }
+    if (ratio >= 0.8) {
+      return '🥇 Héros des Multiplications';
+    }
+    if (ratio >= 0.5) {
+      return '🥈 Explorateur Malin';
+    }
+    return '🥉 Apprenti Courageux';
+  }, [score]);
+
+  const currentFactors = currentQuestion.factors;
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-800 font-sans">
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-slate-700 tracking-tight">
-            Vocabulary Builder
-          </h1>
-          <nav className="flex space-x-2">
-            <button
-              onClick={() => setView('add')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                view === 'add'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-white text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <PlusIcon className="w-5 h-5" />
-              <span>Add Words</span>
-            </button>
-            <div className="relative" ref={learnButtonRef}>
-                <button
-                onClick={() => hasEnoughVocabularyForQuiz && setIsLearnDropdownOpen(prev => !prev)}
-                disabled={!hasEnoughVocabularyForQuiz}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    view === 'learn'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'bg-white text-slate-600 hover:bg-slate-100'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-                title={!hasEnoughVocabularyForQuiz ? "Add at least 3 words to start learning" : "Start learning"}
-                >
-                <LearnIcon className="w-5 h-5" />
-                <span>Learn</span>
-                <ChevronDownIcon className="w-4 h-4 ml-1 transition-transform" style={{ transform: isLearnDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)'}} />
-                </button>
-                {isLearnDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 ring-1 ring-black ring-opacity-5">
-                        <button
-                            onClick={() => handleStartQuiz('recent')}
-                            className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                        >
-                            Recent 30 Words
-                        </button>
-                        <button
-                            onClick={() => handleStartQuiz('all')}
-                            className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
-                        >
-                            All Words
-                        </button>
-                    </div>
-                )}
+    <div className="app">
+      <main className="game-card">
+        <header className="game-header">
+          <div>
+            <p className="badge">Mission Multiplications</p>
+            <h1>Capitaine Calcul</h1>
+            <p className="subtitle">
+              Réponds aux {TOTAL_QUESTIONS} défis et gagne un maximum d'étoiles !
+            </p>
+          </div>
+          <div className="scoreboard" aria-live="polite">
+            <div className="score-box">
+              <span className="score-label">Score</span>
+              <span className="score-value">{score}</span>
+              <span className="score-helper">sur {TOTAL_QUESTIONS}</span>
             </div>
-            <button
-              onClick={() => hasAnyVocabulary && setView('manage')}
-              disabled={!hasAnyVocabulary}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                view === 'manage'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'bg-white text-slate-600 hover:bg-slate-100'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-              title={!hasAnyVocabulary ? "Add words to manage your collection" : "Manage collection"}
-            >
-              <ManageIcon className="w-5 h-5" />
-              <span>Manage</span>
+            <div className="score-box">
+              <span className="score-label">Question</span>
+              <span className="score-value">{questionNumber}</span>
+              <span className="score-helper">/ {TOTAL_QUESTIONS}</span>
+            </div>
+            <div className="score-box">
+              <span className="score-label">Série</span>
+              <span className="score-value">{streak}</span>
+              <span className="score-helper">d'affilée</span>
+            </div>
+          </div>
+        </header>
+
+        <section className="progress-section" aria-label="Progression du quiz">
+          <div className="progress-bar">
+            <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
+          </div>
+          <span className="progress-text">Progression : {progressPercent}%</span>
+        </section>
+
+        {lastResult && (
+          <div
+            className={`last-result ${lastResult.isCorrect ? 'last-result-correct' : 'last-result-wrong'}`}
+            role="status"
+            aria-live="polite"
+          >
+            <span className="last-result-emoji">{lastResult.isCorrect ? '🎉' : '💡'}</span>
+            <div>
+              <p className="last-result-message">{lastResult.message}</p>
+              <p className="last-result-detail">{lastResult.detail}</p>
+            </div>
+          </div>
+        )}
+
+        <section className="mascot-area">
+          <div className="mascot-avatar" aria-hidden="true">
+            🤖
+          </div>
+          <p className="mascot-bubble">{motivationMessage}</p>
+        </section>
+
+        {quizFinished ? (
+          <section className="summary" aria-live="polite">
+            <h2>Mission accomplie !</h2>
+            <p className="summary-score">
+              Tu as obtenu <strong>{score}</strong> point{score > 1 ? 's' : ''} sur {TOTAL_QUESTIONS}.
+            </p>
+            <p className="summary-badge">{finalBadge}</p>
+
+            <ul className="history-list">
+              {history.map((entry, index) => (
+                <li key={`${entry.expression}-${index}`} className={entry.isCorrect ? 'history-correct' : 'history-wrong'}>
+                  <span className="history-step">Q{index + 1}</span>
+                  <span className="history-expression">{entry.expression}</span>
+                  <span className="history-answer">
+                    {entry.playerAnswer}
+                    {entry.isCorrect ? ' ✅' : ` → ${entry.correctAnswer}`}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <button type="button" className="restart-button" onClick={handleRestart}>
+              Rejouer la mission
             </button>
-          </nav>
-        </div>
-      </header>
-      <main className="container mx-auto p-4 md:p-8">
-        {renderContent()}
+          </section>
+        ) : (
+          <section className="question-area">
+            <div className="question-card">
+              <p className="question-label">Défi #{questionNumber}</p>
+              <p className="question-expression">
+                <span>{currentFactors[0]}</span>
+                <span className="question-symbol">×</span>
+                <span>{currentFactors[1]}</span>
+              </p>
+            </div>
+
+            <p className="question-instruction">Choisis la bonne réponse :</p>
+            <div className="options-grid">
+              {currentQuestion.options.map(option => (
+                <button
+                  type="button"
+                  key={option}
+                  className="option-button"
+                  onClick={() => handleAnswer(option)}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
-      <footer className="text-center py-4 text-slate-500 text-sm">
-        <p>Created by a world-class senior frontend React engineer.</p>
-      </footer>
     </div>
   );
 };

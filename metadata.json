@@ -1,5 +1,5 @@
 {
-  "name": "Vocabulary Builder",
-  "description": "An application to help users memorize new vocabulary through a quiz-based learning interface. Users can input their vocabulary lists and then practice with multiple-choice questions.",
+  "name": "Capitaine Calcul",
+  "description": "Application ludique pour entraîner les enfants de 9 ans aux tables de multiplication avec des quiz de 10 questions, des scores et des encouragements.",
   "requestFramePermissions": []
 }

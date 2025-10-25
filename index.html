@@ -1,41 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!doctype html>
+<html lang="fr">
+  <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vocabulary Builder</title>
-    <!-- Tailwind CSS for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React libraries -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    <!-- Babel to transpile JSX in the browser -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <style>
-        /* Add a simple fade-in animation class that components can use */
-        @keyframes fade-in {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-            animation: fade-in 0.5s ease-out forwards;
-        }
-    </style>
-<script type="importmap">
-{
-  "imports": {
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "vite": "https://aistudiocdn.com/vite@^7.1.12",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.0.4"
-  }
-}
-</script>
-</head>
-<body class="bg-slate-100">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Une application ludique pour entraîner un enfant de 9 ans aux tables de multiplication avec des quiz de 10 questions."
+    />
+    <title>Capitaine Calcul - Mission Multiplications</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23ff7eb3' d='M32 4l7.9 16 17.6 2.6-12.7 12.4 3 17.4L32 45.2 16.2 52.4l3-17.4L6.5 22.6 24.1 20z'/%3E%3C/svg%3E" />
+  </head>
+  <body>
     <div id="root"></div>
-    <!-- Load and transpile the React application script -->
-    <script type="text/babel" data-presets="typescript,react" src="index.tsx"></script>
-</body>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
