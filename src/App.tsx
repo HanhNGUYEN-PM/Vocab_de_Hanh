@@ -1,28 +1,29 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 const TOTAL_QUESTIONS = 10;
+const SCORE_LOG_STORAGE_KEY = 'capitaine-calcul-score-log';
 
 const POSITIVE_MESSAGES = [
-  'Bravo, super héros des chiffres !',
-  'Yes ! Tu as dégainé la bonne réponse !',
-  'Génial, tu vises juste !',
-  'Tu progresses à la vitesse de la lumière !',
-  'Fantastique, tu domptes les multiplications !',
+  'Bravo Florian, super héros des chiffres !',
+  'Yes Florian ! Tu as dégainé la bonne réponse !',
+  'Génial Florian, tu vises juste !',
+  'Tu progresses à la vitesse de la lumière, Florian !',
+  'Fantastique Florian, tu domptes les multiplications !',
 ] as const;
 
 const ENCOURAGEMENT_MESSAGES = [
-  "Pas grave, on retente au prochain coup !",
-  'Respire un grand coup, tu vas y arriver !',
-  'Chaque erreur est un tremplin pour réussir !',
-  'Courage, tu deviens un pro des tables !',
-  'On continue, la victoire est proche !',
+  'Pas grave Florian, on retente au prochain coup !',
+  'Respire un grand coup Florian, tu vas y arriver !',
+  'Chaque erreur est un tremplin pour réussir, capitaine Florian !',
+  'Courage Florian, tu deviens un pro des tables !',
+  'On continue Florian, la victoire est proche !',
 ] as const;
 
 const MOTIVATION_PROMPTS = [
-  '✨ Mission: devenir champion des multiplications !',
-  '🚀 Plus tu joues, plus ton cerveau muscle ses super-pouvoirs !',
-  '🎯 Un pas à la fois et tu connaîtras toutes les tables !',
-  '🧠 Ton cerveau brille, continue comme ça !',
+  '✨ Florian, mission : devenir champion des multiplications !',
+  '🚀 Plus tu joues, plus ton cerveau muscle ses super-pouvoirs Florian !',
+  '🎯 Florian, un pas à la fois et tu connaîtras toutes les tables !',
+  '🧠 Ton cerveau brille, continue comme ça Florian !',
 ] as const;
 
 type Question = {
@@ -36,6 +37,13 @@ type HistoryEntry = {
   correctAnswer: number;
   playerAnswer: number;
   isCorrect: boolean;
+};
+
+type ScoreLogEntry = {
+  id: string;
+  playedAt: string;
+  score: number;
+  total: number;
 };
 
 type LastResult = {
@@ -57,6 +65,40 @@ const shuffle = <T,>(items: T[]): T[] => {
 };
 
 const pick = <T,>(list: readonly T[]): T => list[randomInt(0, list.length - 1)];
+
+const formatLogDate = (isoDate: string) => {
+  const formatter = new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'short',
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return formatter.format(new Date(isoDate));
+};
+
+const readStoredScoreLog = (): ScoreLogEntry[] => {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  try {
+    const stored = window.localStorage.getItem(SCORE_LOG_STORAGE_KEY);
+    if (!stored) {
+      return [];
+    }
+
+    const parsed = JSON.parse(stored) as ScoreLogEntry[];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter(entry => typeof entry?.playedAt === 'string' && typeof entry?.score === 'number');
+  } catch (error) {
+    console.error('Impossible de lire le registre des scores :', error);
+    return [];
+  }
+};
 
 const createQuestion = (): Question => {
   const factorA = randomInt(2, 10);
@@ -87,6 +129,7 @@ const App: React.FC = () => {
   const [quizFinished, setQuizFinished] = useState(false);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const [streak, setStreak] = useState(0);
+  const [scoreLog, setScoreLog] = useState<ScoreLogEntry[]>(() => readStoredScoreLog());
 
   const handleAnswer = (choice: number) => {
     if (quizFinished) {
@@ -108,7 +151,8 @@ const App: React.FC = () => {
       },
     ]);
 
-    setScore(prev => prev + (isCorrect ? 1 : 0));
+    const newScore = isCorrect ? score + 1 : score;
+    setScore(newScore);
     setStreak(prev => (isCorrect ? prev + 1 : 0));
     setLastResult({
       isCorrect,
@@ -121,6 +165,14 @@ const App: React.FC = () => {
     setQuestionsAnswered(newTotalAnswered);
 
     if (newTotalAnswered >= TOTAL_QUESTIONS) {
+      const logEntry: ScoreLogEntry = {
+        id: `${Date.now()}`,
+        playedAt: new Date().toISOString(),
+        score: newScore,
+        total: TOTAL_QUESTIONS,
+      };
+
+      setScoreLog(prev => [logEntry, ...prev].slice(0, 6));
       setQuizFinished(true);
     } else {
       setCurrentQuestion(createQuestion());
@@ -137,6 +189,14 @@ const App: React.FC = () => {
     setStreak(0);
   };
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.localStorage.setItem(SCORE_LOG_STORAGE_KEY, JSON.stringify(scoreLog));
+  }, [scoreLog]);
+
   const progressPercent = quizFinished
     ? 100
     : Math.round((questionsAnswered / TOTAL_QUESTIONS) * 100);
@@ -146,28 +206,28 @@ const App: React.FC = () => {
   const motivationMessage = useMemo(() => {
     if (quizFinished) {
       if (score === TOTAL_QUESTIONS) {
-        return '🌟 Score parfait ! Tu es le maître des multiplications !';
+        return '🌟 Score parfait Florian ! Tu es le maître des multiplications !';
       }
       if (score >= 8) {
-        return '🏅 Impressionnant ! Encore une partie pour devenir imbattable ?';
+        return '🏅 Impressionnant Florian ! Encore une mission pour devenir imbattable ?';
       }
       if (score >= 5) {
-        return '💪 Beau travail ! Un petit entraînement de plus et tu seras au top.';
+        return '💪 Beau travail Florian ! Un petit entraînement de plus et tu seras au top.';
       }
-      return '🔁 Chaque partie te rapproche du super-héros des maths !';
+      return '🔁 Chaque partie te rapproche du super-héros des maths, Florian !';
     }
 
     if (streak >= 3) {
-      return `🔥 ${streak} réponses justes d'affilée, quelle fusée !`;
+      return `🔥 ${streak} réponses justes d'affilée, Florian, quelle fusée !`;
     }
 
     switch (questionsAnswered) {
       case 0:
-        return '🚀 Prêt pour une mission spéciale multiplications ?';
+        return '🚀 Prêt pour ta mission spéciale multiplications, Florian ?';
       case 1:
-        return '🎉 Une de faite, continue comme ça !';
+        return '🎉 Une de faite, Florian ! Continue comme ça !';
       case 5:
-        return '🧠 Tu es déjà à mi-parcours, ne lâche rien !';
+        return '🧠 Tu es déjà à mi-parcours Florian, ne lâche rien !';
       default:
         return pick(MOTIVATION_PROMPTS);
     }
@@ -193,11 +253,11 @@ const App: React.FC = () => {
     <div className="app">
       <main className="game-card">
         <header className="game-header">
-          <div>
+          <div className="hero">
             <p className="badge">Mission Multiplications</p>
             <h1>Capitaine Calcul</h1>
             <p className="subtitle">
-              Réponds aux {TOTAL_QUESTIONS} défis et gagne un maximum d'étoiles !
+              Florian, relève les {TOTAL_QUESTIONS} défis et décroche toutes les étoiles !
             </p>
           </div>
           <div className="scoreboard" aria-live="polite">
@@ -219,85 +279,127 @@ const App: React.FC = () => {
           </div>
         </header>
 
-        <section className="progress-section" aria-label="Progression du quiz">
-          <div className="progress-bar">
-            <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
-          </div>
-          <span className="progress-text">Progression : {progressPercent}%</span>
-        </section>
-
-        {lastResult && (
-          <div
-            className={`last-result ${lastResult.isCorrect ? 'last-result-correct' : 'last-result-wrong'}`}
-            role="status"
-            aria-live="polite"
+        <div className="game-body">
+          <section
+            className={`primary-panel ${quizFinished ? 'primary-panel-summary' : 'primary-panel-question'}`}
+            aria-live={quizFinished ? 'polite' : undefined}
           >
-            <span className="last-result-emoji">{lastResult.isCorrect ? '🎉' : '💡'}</span>
-            <div>
-              <p className="last-result-message">{lastResult.message}</p>
-              <p className="last-result-detail">{lastResult.detail}</p>
-            </div>
-          </div>
-        )}
+            {quizFinished ? (
+              <div className="summary">
+                <div className="summary-header">
+                  <h2>Mission accomplie Florian !</h2>
+                  <p className="summary-badge">{finalBadge}</p>
+                </div>
+                <p className="summary-score">
+                  Tu as obtenu <strong>{score}</strong> point{score > 1 ? 's' : ''} sur {TOTAL_QUESTIONS}.
+                </p>
 
-        <section className="mascot-area">
-          <div className="mascot-avatar" aria-hidden="true">
-            🤖
-          </div>
-          <p className="mascot-bubble">{motivationMessage}</p>
-        </section>
+                <ul className="history-grid">
+                  {history.map((entry, index) => (
+                    <li
+                      key={`${entry.expression}-${index}`}
+                      className={entry.isCorrect ? 'history-correct' : 'history-wrong'}
+                    >
+                      <span className="history-step">Q{index + 1}</span>
+                      <span className="history-expression">{entry.expression}</span>
+                      <span className="history-answer">
+                        {entry.playerAnswer}
+                        {entry.isCorrect ? ' ✅' : ` → ${entry.correctAnswer}`}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
 
-        {quizFinished ? (
-          <section className="summary" aria-live="polite">
-            <h2>Mission accomplie !</h2>
-            <p className="summary-score">
-              Tu as obtenu <strong>{score}</strong> point{score > 1 ? 's' : ''} sur {TOTAL_QUESTIONS}.
-            </p>
-            <p className="summary-badge">{finalBadge}</p>
-
-            <ul className="history-list">
-              {history.map((entry, index) => (
-                <li key={`${entry.expression}-${index}`} className={entry.isCorrect ? 'history-correct' : 'history-wrong'}>
-                  <span className="history-step">Q{index + 1}</span>
-                  <span className="history-expression">{entry.expression}</span>
-                  <span className="history-answer">
-                    {entry.playerAnswer}
-                    {entry.isCorrect ? ' ✅' : ` → ${entry.correctAnswer}`}
-                  </span>
-                </li>
-              ))}
-            </ul>
-
-            <button type="button" className="restart-button" onClick={handleRestart}>
-              Rejouer la mission
-            </button>
-          </section>
-        ) : (
-          <section className="question-area">
-            <div className="question-card">
-              <p className="question-label">Défi #{questionNumber}</p>
-              <p className="question-expression">
-                <span>{currentFactors[0]}</span>
-                <span className="question-symbol">×</span>
-                <span>{currentFactors[1]}</span>
-              </p>
-            </div>
-
-            <p className="question-instruction">Choisis la bonne réponse :</p>
-            <div className="options-grid">
-              {currentQuestion.options.map(option => (
-                <button
-                  type="button"
-                  key={option}
-                  className="option-button"
-                  onClick={() => handleAnswer(option)}
-                >
-                  {option}
+                <button type="button" className="restart-button" onClick={handleRestart}>
+                  Rejouer la mission
                 </button>
-              ))}
-            </div>
+              </div>
+            ) : (
+              <div className="question-area">
+                <div className="question-card">
+                  <div className="question-info">
+                    <p className="question-label">Défi #{questionNumber}</p>
+                    <p className="question-expression">
+                      <span>{currentFactors[0]}</span>
+                      <span className="question-symbol">×</span>
+                      <span>{currentFactors[1]}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <p className="question-instruction">Choisis la bonne réponse :</p>
+                <div className="options-grid">
+                  {currentQuestion.options.map(option => (
+                    <button
+                      type="button"
+                      key={option}
+                      className="option-button"
+                      onClick={() => handleAnswer(option)}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
-        )}
+
+          <aside className="status-panel">
+            <section className="status-card progress-card" aria-label="Progression du quiz">
+              <header className="status-heading">
+                <h2>Progression</h2>
+                <span className="progress-percent">{progressPercent}%</span>
+              </header>
+              <div className="progress-bar">
+                <div className="progress-bar-fill" style={{ width: `${progressPercent}%` }} />
+              </div>
+            </section>
+
+            {lastResult && (
+              <section
+                className={`status-card last-result ${
+                  lastResult.isCorrect ? 'last-result-correct' : 'last-result-wrong'
+                }`}
+                role="status"
+                aria-live="polite"
+              >
+                <span className="last-result-emoji">{lastResult.isCorrect ? '🎉' : '💡'}</span>
+                <div>
+                  <p className="last-result-message">{lastResult.message}</p>
+                  <p className="last-result-detail">{lastResult.detail}</p>
+                </div>
+              </section>
+            )}
+
+            <section className="status-card mascot-card">
+              <div className="mascot-avatar" aria-hidden="true">
+                🤖
+              </div>
+              <p className="mascot-bubble">{motivationMessage}</p>
+            </section>
+
+            <section className="status-card log-card">
+              <header className="status-heading">
+                <h2>Journal des missions</h2>
+                <span className="log-helper">Scores de Florian</span>
+              </header>
+              {scoreLog.length > 0 ? (
+                <ul className="log-list">
+                  {scoreLog.map(entry => (
+                    <li key={entry.id}>
+                      <span className="log-date">{formatLogDate(entry.playedAt)}</span>
+                      <span className="log-score">
+                        {entry.score} / {entry.total}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="log-empty">Joue une première partie pour remplir ton journal, Florian !</p>
+              )}
+            </section>
+          </aside>
+        </div>
       </main>
     </div>
   );
