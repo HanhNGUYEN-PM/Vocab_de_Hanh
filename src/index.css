@@ -32,6 +32,7 @@ body {
   justify-content: center;
   padding: clamp(16px, 4vh, 32px);
   color: var(--color-text);
+  overflow-y: auto;
 }
 
 #root {
@@ -81,9 +82,8 @@ body {
   padding: clamp(24px, 3vw, 36px);
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: 24px;
-  height: min(640px, calc(100vh - clamp(48px, 10vh, 96px)));
-  overflow: hidden;
+  gap: clamp(18px, 3vh, 28px);
+  min-height: clamp(540px, calc(100vh - clamp(44px, 12vh, 108px)), 760px);
 }
 
 .game-header {
@@ -407,6 +407,7 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
 }
 
 .status-heading {
@@ -513,6 +514,8 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  max-height: 160px;
+  overflow-y: auto;
 }
 
 .log-list li {
@@ -541,6 +544,71 @@ h1 {
   margin: 0;
   font-size: 0.95rem;
   color: var(--color-muted);
+}
+
+@media (max-height: 820px) {
+  body {
+    align-items: flex-start;
+    padding: clamp(12px, 4vh, 24px);
+  }
+
+  .app {
+    width: min(900px, 100%);
+  }
+
+  .game-card {
+    min-height: auto;
+  }
+
+  .game-header {
+    gap: 12px;
+  }
+
+  .hero {
+    gap: 8px;
+  }
+
+  .subtitle {
+    font-size: 0.95rem;
+  }
+
+  .scoreboard {
+    gap: 10px;
+  }
+
+  .score-box {
+    padding: 14px 16px;
+  }
+
+  .game-body {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .status-panel {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .status-card {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 200px;
+  }
+
+  .status-panel .status-card:last-child {
+    flex-basis: 100%;
+  }
+
+  .history-grid {
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .log-list {
+    max-height: 140px;
+  }
 }
 
 @media (max-width: 1024px) {
