@@ -54,11 +54,8 @@ Ce projet est déjà configuré pour être publié sur GitHub Pages via la branc
      ```
 
    - Si vous souhaitez publier à la racine `https://hanhnguyen-pm.github.io/`, il faudra utiliser un dépôt nommé `hanhnguyen-pm.github.io` (spécificité GitHub Pages) ou copier les fichiers du dossier `dist` vers ce dépôt dédié.
-   - Pour héberger dans un autre sous-dossier, adaptez simplement `homepage` et, si besoin, forcez le chemin lors du build :
-
-     ```bash
-     VITE_BASE_PATH=/chemin-personnalise/ npm run build
-     ```
+   - Les chemins générés dans `dist` sont désormais relatifs : vous pouvez donc copier le dossier de build vers n'importe quel emplacement (même `https://hanhnguyen-pm.github.io/`) sans modification supplémentaire.
+   - Pour un cas très spécifique où un chemin absolu est requis, vous pouvez toujours forcer la valeur via la variable d'environnement `VITE_BASE_PATH` lors du build (ex. `VITE_BASE_PATH=/chemin-personnalise/ npm run build`).
 
 2. **Construire et déployer**
 
