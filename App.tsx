@@ -112,6 +112,24 @@ const decodeHiddenPayload = (value: string): string | null => {
   }
 };
 
+const encodeHiddenPayload = (payload: string): string => {
+  try {
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(payload);
+    let bits = '';
+    bytes.forEach(byte => {
+      bits += byte.toString(2).padStart(8, '0');
+    });
+    return bits
+      .split('')
+      .map(bit => (bit === '1' ? ZERO_WIDTH_ONE : ZERO_WIDTH_ZERO))
+      .join('');
+  } catch (error) {
+    console.error('Failed to encode hidden payload:', error);
+    return '';
+  }
+};
+
 const stripHiddenCharacters = (value: string): string => value.replace(ZERO_WIDTH_PATTERN, '');
 
 const parseSyncPackage = (
@@ -392,8 +410,12 @@ const App: React.FC = () => {
   const [lastShareCode, setLastShareCode] = useState<string | null>(null);
   const [lastSharePayload, setLastSharePayload] = useState<string | null>(null);
   const [lastSharePackage, setLastSharePackage] = useState<string | null>(null);
+  const [lastHiddenShare, setLastHiddenShare] = useState<string | null>(null);
   const [isPackageVisible, setIsPackageVisible] = useState(false);
   const [isSyncCollapsed, setIsSyncCollapsed] = useState(false);
+  const [isManualImportMode, setIsManualImportMode] = useState(false);
+  const [customSyncCode, setCustomSyncCode] = useState(() => generateNumericCode(6));
+  const [customCodeError, setCustomCodeError] = useState<string | null>(null);
 
   const hasEnoughVocabularyForQuiz = vocabulary.length >= 3;
   const isQuizViewActive = view === 'learn' && quizScope !== null && hasEnoughVocabularyForQuiz;
@@ -483,7 +505,10 @@ const App: React.FC = () => {
     setImportStatus(null);
     setImportError(null);
     setLastShareCode(null);
-    setLastShareToken(null);
+    setLastSharePayload(null);
+    setLastSharePackage(null);
+    setLastHiddenShare(null);
+    setIsManualImportMode(false);
     setIsPackageVisible(false);
 
     setVocabulary(prevVocabulary => {
@@ -523,28 +548,46 @@ const App: React.FC = () => {
   }, [persistVocabulary]);
 
   const handleCreateSyncCode = async () => {
+    const desiredCode = stripHiddenCharacters(customSyncCode).trim();
+    if (!/^\d{6}$/.test(desiredCode)) {
+      setCustomCodeError('Enter exactly six digits.');
+      setShareStatus('Choose a six-digit code before creating a sync code.');
+      setLastShareCode(null);
+      setLastSharePayload(null);
+      setLastSharePackage(null);
+      setLastHiddenShare(null);
+      return;
+    }
+
+    setCustomCodeError(null);
+
     if (vocabulary.length === 0) {
       setShareStatus('Add a few words before creating a sync code.');
       setLastShareCode(null);
       setLastSharePayload(null);
       setLastSharePackage(null);
+      setLastHiddenShare(null);
       return;
     }
 
     try {
       const payload = encodeVocabularyForTransfer(vocabulary);
-      const shortCode = generateNumericCode(6);
+      const shortCode = desiredCode;
       storeSyncCodePayload(shortCode, payload);
       const sharePackage = formatSyncPackage(shortCode, payload);
+      const hiddenShare = `${shortCode}${encodeHiddenPayload(payload)}`;
       setLastShareCode(shortCode);
+      setCustomSyncCode(shortCode);
       setLastSharePayload(payload);
       setLastSharePackage(sharePackage);
+      setLastHiddenShare(hiddenShare);
       setIsPackageVisible(false);
       setIsSyncCollapsed(false);
+      setIsManualImportMode(false);
 
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        await navigator.clipboard.writeText(sharePackage);
-        setShareStatus('Sync package copied. Paste the entire string into the import form on your other device.');
+        await navigator.clipboard.writeText(hiddenShare);
+        setShareStatus('Sync code copied. Paste the six digits into the import form on your other device.');
       } else {
         setIsPackageVisible(true);
         setShareStatus('Copy the sync package text below and paste it into the import form on your other device.');
@@ -561,6 +604,7 @@ const App: React.FC = () => {
     setImportInput('');
     setImportError(null);
     setImportStatus(null);
+    setIsManualImportMode(false);
   };
 
   const handleCopySyncCode = async () => {
@@ -570,9 +614,9 @@ const App: React.FC = () => {
 
     try {
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        const packageText = lastSharePackage ?? formatSyncPackage(lastShareCode, lastSharePayload);
+        const packageText = lastHiddenShare ?? `${lastShareCode}${encodeHiddenPayload(lastSharePayload)}`;
         await navigator.clipboard.writeText(packageText);
-        setShareStatus('Sync package copied. Paste the entire string into the import form on your other device.');
+        setShareStatus('Sync code copied. Paste the six digits into the import form on your other device.');
       } else {
         setIsPackageVisible(true);
         setShareStatus('Select and copy the sync package text manually.');
@@ -590,8 +634,16 @@ const App: React.FC = () => {
 
     const trimmedInput = importInput.trim();
     if (!trimmedInput) {
-      setImportError('Paste the sync package text that was copied when you created the code.');
+      setImportError(isManualImportMode ? 'Paste the sync package text that was copied when you created the code.' : 'Enter your six-digit sync code.');
       return;
+    }
+
+    if (!isManualImportMode) {
+      const digitsOnly = stripHiddenCharacters(trimmedInput).replace(/\D/g, '');
+      if (digitsOnly.length !== 6) {
+        setImportError('Enter all six digits of your sync code.');
+        return;
+      }
     }
 
     const { payload, code } = extractPayloadFromInput(trimmedInput);
@@ -629,6 +681,7 @@ const App: React.FC = () => {
     );
     setImportInput('');
     setIsImportOpen(false);
+    setIsManualImportMode(false);
   };
 
   const handleStartQuiz = (scope: QuizScope) => {
@@ -760,7 +813,7 @@ const App: React.FC = () => {
                 <div className="flex-1">
                   <h2 className="text-lg font-semibold text-indigo-900">Stay in sync across devices</h2>
                   <p className="text-sm text-indigo-800 mt-1">
-                    Create a sync code to back up your words, then paste the copied sync package on another device to restore them.
+                    Create a sync code to back up your words, then paste the six digits on another device to restore them.
                   </p>
                 </div>
                 <button
@@ -787,7 +840,7 @@ const App: React.FC = () => {
                   onClick={toggleImportSection}
                   className="px-4 py-2 bg-white text-indigo-700 font-semibold rounded-md shadow hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  {isImportOpen ? 'Close import' : 'Import sync package'}
+                  {isImportOpen ? 'Close import' : 'Import sync code'}
                 </button>
               </div>
 
@@ -807,6 +860,44 @@ const App: React.FC = () => {
 
               {!isSyncCollapsed && (
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                      Choose your 6-digit sync code
+                    </label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        value={customSyncCode}
+                        onChange={(event) => {
+                          const digitsOnly = event.target.value.replace(/\D/g, '').slice(0, 6);
+                          setCustomSyncCode(digitsOnly);
+                          if (customCodeError) {
+                            setCustomCodeError(null);
+                          }
+                        }}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        className="w-full sm:max-w-xs px-3 py-2 font-mono text-sm bg-white border border-indigo-200 rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="For example: 246810"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomSyncCode(generateNumericCode(6));
+                          setCustomCodeError(null);
+                        }}
+                        className="px-3 py-2 bg-white text-indigo-700 text-sm font-semibold rounded-md border border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      >
+                        Random code
+                      </button>
+                    </div>
+                    <p className="text-xs text-slate-500">
+                      Pick digits you can remember. When you copy the code, your vocabulary is hidden inside those six numbers.
+                    </p>
+                    {customCodeError && (
+                      <p className="text-xs text-red-600 font-medium">{customCodeError}</p>
+                    )}
+                  </div>
+
                   {lastShareCode && lastSharePayload && (
                     <div className="space-y-2">
                       <div>
@@ -824,11 +915,11 @@ const App: React.FC = () => {
                             onClick={handleCopySyncCode}
                             className="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                           >
-                            Copy sync package
+                            Copy sync code
                           </button>
                         </div>
                         <p className="text-xs text-slate-500 mt-2">
-                          Use the buttons to copy the sync package. Paste the full string into the import form on your other device.
+                          Use the copy button so the hidden data stays with your digits. Paste the code on your other device to restore your words.
                         </p>
                       </div>
 
@@ -838,7 +929,7 @@ const App: React.FC = () => {
                           onClick={() => setIsPackageVisible(prev => !prev)}
                           className="px-3 py-2 bg-white text-indigo-700 text-xs font-semibold rounded-md border border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
-                          {isPackageVisible ? 'Hide sync package text' : 'Show sync package text (copy manually)'}
+                          {isPackageVisible ? 'Hide sync package text' : 'Show sync package text (manual backup)'}
                         </button>
                         {isPackageVisible && (
                           <div>
@@ -848,7 +939,7 @@ const App: React.FC = () => {
                               className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
                             />
                             <p className="text-xs text-slate-500 mt-2">
-                              Copy and send this string if needed. Paste the entire text into the import form on the other device.
+                              Copy and send this string only if pasting the digits does not work. The entire text must be pasted on the other device.
                             </p>
                           </div>
                         )}
@@ -857,16 +948,87 @@ const App: React.FC = () => {
                   )}
 
                   {isImportOpen && (
-                    <form onSubmit={handleImportSubmit} className="space-y-3">
-                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                        Paste the sync package text you copied
-                      </label>
-                      <textarea
-                        value={importInput}
-                        onChange={(event) => setImportInput(event.target.value)}
-                        placeholder="Paste the sync package string (for example: 123456:eyJ2b2NhYiI6Wy4uLl0=)"
-                        className="w-full h-32 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
+                    <form onSubmit={handleImportSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                          Enter your 6-digit sync code
+                        </label>
+                        <input
+                          value={importInput}
+                          onChange={(event) => {
+                            const allowedPattern = new RegExp(`[^0-9${ZERO_WIDTH_ZERO}${ZERO_WIDTH_ONE}]`, 'g');
+                            const allowedValue = event.target.value.replace(allowedPattern, '');
+                            let digitCount = 0;
+                            let result = '';
+                            for (const char of allowedValue) {
+                              if (/\d/.test(char)) {
+                                if (digitCount >= 6) {
+                                  continue;
+                                }
+                                digitCount += 1;
+                                result += char;
+                              } else {
+                                result += char;
+                              }
+                            }
+                            setImportInput(result);
+                            if (importError) {
+                              setImportError(null);
+                            }
+                            if (importStatus) {
+                              setImportStatus(null);
+                            }
+                          }}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
+                          placeholder="Paste or type your code (for example: 246810)"
+                          className="w-full px-3 py-2 font-mono text-sm bg-white border border-indigo-200 rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        <p className="text-xs text-slate-500">
+                          Paste the digits you copied. Copying keeps the hidden data intact, but typing the six numbers also works if the app delivering the code removed the hidden data.
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsManualImportMode(prev => {
+                              const next = !prev;
+                              setImportInput('');
+                              setImportError(null);
+                              setImportStatus(null);
+                              return next;
+                            });
+                          }}
+                          className="text-xs font-semibold text-indigo-700 hover:underline"
+                        >
+                          {isManualImportMode ? 'Use the 6-digit code instead' : 'Trouble? Paste the full sync package'}
+                        </button>
+                      </div>
+
+                      {isManualImportMode && (
+                        <div className="space-y-2">
+                          <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                            Paste the sync package text you copied
+                          </label>
+                          <textarea
+                            value={importInput}
+                            onChange={(event) => {
+                              setImportInput(event.target.value);
+                              if (importError) {
+                                setImportError(null);
+                              }
+                              if (importStatus) {
+                                setImportStatus(null);
+                              }
+                            }}
+                            placeholder="Paste the sync package string (for example: 123456:eyJ2b2NhYiI6Wy4uLl0=)"
+                            className="w-full h-32 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                          <p className="text-xs text-slate-500">
+                            Use this fallback if a messaging app strips the hidden data from the digits.
+                          </p>
+                        </div>
+                      )}
+
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
