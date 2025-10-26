@@ -414,8 +414,13 @@ const App: React.FC = () => {
   const [lastSharePayload, setLastSharePayload] = useState<string | null>(null);
   const [lastShareToken, setLastShareToken] = useState<string | null>(null);
   const [isPackageVisible, setIsPackageVisible] = useState(false);
+  const [isSyncCollapsed, setIsSyncCollapsed] = useState(false);
+
+  const hasEnoughVocabularyForQuiz = vocabulary.length >= 3;
+  const isQuizViewActive = view === 'learn' && quizScope !== null && hasEnoughVocabularyForQuiz;
 
   const learnButtonRef = useRef<HTMLDivElement>(null);
+  const previousQuizViewRef = useRef<boolean>(isQuizViewActive);
 
   const persistVocabulary = useCallback((vocab: VocabularyItem[]) => {
     try {
@@ -477,6 +482,22 @@ const App: React.FC = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (isQuizViewActive && !previousQuizViewRef.current) {
+      setIsSyncCollapsed(true);
+    } else if (!isQuizViewActive && previousQuizViewRef.current) {
+      setIsSyncCollapsed(false);
+    }
+
+    previousQuizViewRef.current = isQuizViewActive;
+  }, [isQuizViewActive]);
+
+  useEffect(() => {
+    if (isSyncCollapsed) {
+      setIsImportOpen(false);
+    }
+  }, [isSyncCollapsed]);
 
   const handleSaveVocabulary = useCallback((newItems: VocabularyItem[]) => {
     setShareStatus(null);
@@ -540,6 +561,7 @@ const App: React.FC = () => {
       setLastSharePayload(payload);
       setLastShareToken(shareToken);
       setIsPackageVisible(false);
+      setIsSyncCollapsed(false);
 
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         await navigator.clipboard.writeText(shareToken);
@@ -554,6 +576,7 @@ const App: React.FC = () => {
   };
 
   const toggleImportSection = () => {
+    setIsSyncCollapsed(false);
     setIsImportOpen(prev => !prev);
     setImportInput('');
     setImportError(null);
@@ -633,7 +656,6 @@ const App: React.FC = () => {
     setIsLearnDropdownOpen(false);
   };
 
-  const hasEnoughVocabularyForQuiz = vocabulary.length >= 3;
   const hasAnyVocabulary = vocabulary.length > 0;
 
   const renderContent = () => {
@@ -742,120 +764,150 @@ const App: React.FC = () => {
           </nav>
         </div>
       </header>
-      <main className="container mx-auto p-4 md:p-8 space-y-6">
-        <section className="bg-indigo-50 border border-indigo-100 rounded-lg p-4 md:p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h2 className="text-lg font-semibold text-indigo-900">Stay in sync across devices</h2>
-              <p className="text-sm text-indigo-800 mt-1">
-                Create a sync code to back up your words and paste it into the app on another device.
-              </p>
-              {shareStatus && (
-                <p className="text-sm text-indigo-700 mt-3 font-medium">{shareStatus}</p>
-              )}
-              {importStatus && (
-                <p className="text-sm text-green-700 mt-3 font-medium">{importStatus}</p>
-              )}
-              {importError && (
-                <p className="text-sm text-red-600 mt-3 font-medium">{importError}</p>
-              )}
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <button
-                onClick={handleCreateSyncCode}
-                className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Copy sync code
-              </button>
-              <button
-                onClick={toggleImportSection}
-                className="px-4 py-2 bg-white text-indigo-700 font-semibold rounded-md shadow hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                {isImportOpen ? 'Close import' : 'Import sync code'}
-              </button>
-            </div>
+      <main className="container mx-auto p-4 md:p-8">
+        <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+          <div className="flex-1 space-y-6">
+            {renderContent()}
           </div>
-
-          {lastShareCode && lastSharePayload && (
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                  6-digit sync code
-                </label>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    value={lastShareCode}
-                    readOnly
-                    className="w-full sm:max-w-xs px-3 py-2 font-mono text-sm bg-white border border-indigo-200 rounded-md text-slate-700"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleCopySyncCode}
-                    className="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Copy code
-                  </button>
+          <section
+            className={`w-full bg-indigo-50 border border-indigo-100 rounded-lg p-4 md:p-6 shadow-sm transition-all duration-300 lg:flex-none ${
+              isQuizViewActive ? 'lg:max-w-sm xl:max-w-md' : 'lg:max-w-md xl:max-w-lg'
+            }`}
+          >
+            <div className="flex flex-col gap-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <h2 className="text-lg font-semibold text-indigo-900">Stay in sync across devices</h2>
+                  <p className="text-sm text-indigo-800 mt-1">
+                    Create a sync code to back up your words and paste it into the app on another device.
+                  </p>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  Use the copy button to share your words. The digits you paste include the hidden backup data.
-                </p>
-              </div>
-
-              <div className="space-y-2">
                 <button
                   type="button"
-                  onClick={() => setIsPackageVisible(prev => !prev)}
-                  className="px-3 py-2 bg-white text-indigo-700 text-xs font-semibold rounded-md border border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  onClick={() => setIsSyncCollapsed(prev => !prev)}
+                  className="inline-flex items-center gap-1 px-3 py-1 text-xs font-semibold text-indigo-700 bg-white/80 border border-indigo-200 rounded-md shadow-sm hover:bg-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  aria-expanded={!isSyncCollapsed}
                 >
-                  {isPackageVisible ? 'Hide sync package text' : 'Show sync package text (manual fallback)'}
+                  <ChevronDownIcon
+                    className={`w-4 h-4 transition-transform ${isSyncCollapsed ? '-rotate-90' : 'rotate-0'}`}
+                  />
+                  <span>{isSyncCollapsed ? 'Expand' : 'Collapse'}</span>
                 </button>
-                {isPackageVisible && (
-                  <div>
-                    <textarea
-                      value={formatSyncPackage(lastShareCode, lastSharePayload)}
-                      readOnly
-                      className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
-                    />
-                    <p className="text-xs text-slate-500 mt-2">
-                      Use this only if your messaging app removes hidden characters. Paste the entire string on the other device.
-                    </p>
-                  </div>
-                )}
               </div>
-            </div>
-          )}
 
-          {isImportOpen && (
-            <form onSubmit={handleImportSubmit} className="mt-4 space-y-3">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Paste copied sync code or reveal the package text
-              </label>
-              <textarea
-                value={importInput}
-                onChange={(event) => setImportInput(event.target.value)}
-                placeholder="Paste the copied sync code (just the digits) or, if needed, paste the revealed sync package text"
-                className="w-full h-32 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-              <div className="flex justify-end gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
-                  type="button"
+                  onClick={handleCreateSyncCode}
+                  className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Copy sync code
+                </button>
+                <button
                   onClick={toggleImportSection}
-                  className="px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded-md hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400"
+                  className="px-4 py-2 bg-white text-indigo-700 font-semibold rounded-md shadow hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  Import words
+                  {isImportOpen ? 'Close import' : 'Import sync code'}
                 </button>
               </div>
-            </form>
-          )}
-        </section>
 
-        {renderContent()}
+              {(shareStatus || importStatus || importError) && (
+                <div className="space-y-2">
+                  {shareStatus && (
+                    <p className="text-sm text-indigo-700 font-medium">{shareStatus}</p>
+                  )}
+                  {importStatus && (
+                    <p className="text-sm text-green-700 font-medium">{importStatus}</p>
+                  )}
+                  {importError && (
+                    <p className="text-sm text-red-600 font-medium">{importError}</p>
+                  )}
+                </div>
+              )}
+
+              {!isSyncCollapsed && (
+                <div className="space-y-4">
+                  {lastShareCode && lastSharePayload && (
+                    <div className="space-y-2">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                          6-digit sync code
+                        </label>
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <input
+                            value={lastShareCode}
+                            readOnly
+                            className="w-full sm:max-w-xs px-3 py-2 font-mono text-sm bg-white border border-indigo-200 rounded-md text-slate-700"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleCopySyncCode}
+                            className="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          >
+                            Copy code
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-2">
+                          Use the copy button to share your words. The digits you paste include the hidden backup data.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsPackageVisible(prev => !prev)}
+                          className="px-3 py-2 bg-white text-indigo-700 text-xs font-semibold rounded-md border border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        >
+                          {isPackageVisible ? 'Hide sync package text' : 'Show sync package text (manual fallback)'}
+                        </button>
+                        {isPackageVisible && (
+                          <div>
+                            <textarea
+                              value={formatSyncPackage(lastShareCode, lastSharePayload)}
+                              readOnly
+                              className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
+                            />
+                            <p className="text-xs text-slate-500 mt-2">
+                              Use this only if your messaging app removes hidden characters. Paste the entire string on the other device.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {isImportOpen && (
+                    <form onSubmit={handleImportSubmit} className="space-y-3">
+                      <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                        Paste copied sync code or reveal the package text
+                      </label>
+                      <textarea
+                        value={importInput}
+                        onChange={(event) => setImportInput(event.target.value)}
+                        placeholder="Paste the copied sync code (just the digits) or, if needed, paste the revealed sync package text"
+                        className="w-full h-32 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={toggleImportSection}
+                          className="px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded-md hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        >
+                          Import words
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
       </main>
       <footer className="text-center py-4 text-slate-500 text-sm">
         <p>Created by a world-class senior frontend React engineer.</p>
