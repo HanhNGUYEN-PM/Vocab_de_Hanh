@@ -46,11 +46,18 @@ forme de quiz de 10 questions à choix multiple avec un score final et un histor
 Ce projet est déjà configuré pour être publié sur GitHub Pages via la branche `gh-pages`.
 
 1. **Configurer l'URL du dépôt**
-   - Le champ `homepage` de `package.json` pointe déjà vers `https://hanhnguyen-pm.github.io/` pour publier directement à la racine de votre profil GitHub.
-   - Si vous souhaitez héberger l'application dans un sous-dossier (par exemple `https://hanhnguyen-pm.github.io/Vocab_de_Hanh/`), modifiez la valeur de `homepage` puis, si besoin, lancez le build avec un chemin personnalisé :
+   - Par défaut, le champ `homepage` de `package.json` pointe vers `https://hanhnguyen-pm.github.io/Vocab_de_Hanh/`, ce qui correspond à l'URL publique générée par GitHub Pages pour ce dépôt précis.
+   - Cette adresse fonctionne immédiatement après le déploiement :
+
+     ```text
+     https://hanhnguyen-pm.github.io/Vocab_de_Hanh/
+     ```
+
+   - Si vous souhaitez publier à la racine `https://hanhnguyen-pm.github.io/`, il faudra utiliser un dépôt nommé `hanhnguyen-pm.github.io` (spécificité GitHub Pages) ou copier les fichiers du dossier `dist` vers ce dépôt dédié.
+   - Pour héberger dans un autre sous-dossier, adaptez simplement `homepage` et, si besoin, forcez le chemin lors du build :
 
      ```bash
-     VITE_BASE_PATH=/Vocab_de_Hanh/ npm run build
+     VITE_BASE_PATH=/chemin-personnalise/ npm run build
      ```
 
 2. **Construire et déployer**
@@ -63,11 +70,7 @@ Ce projet est déjà configuré pour être publié sur GitHub Pages via la branc
 
 3. **Activer GitHub Pages**
    - Dans les paramètres du dépôt, section **Pages**, choisissez la branche `gh-pages` et le dossier `/ (root)`.
-   - Une fois la page active, l'application sera disponible à l'adresse indiquée dans `homepage`. Avec la configuration fournie, vous pourrez partager directement :
-
-     ```text
-     https://hanhnguyen-pm.github.io/
-     ```
+   - Une fois la page active, l'application sera disponible à l'adresse indiquée dans `homepage` (`https://hanhnguyen-pm.github.io/Vocab_de_Hanh/` avec la configuration actuelle).
 
 ## 🔗 Partager l'application sans compte Vercel
 
