@@ -12,6 +12,59 @@ type View = 'add' | 'learn' | 'manage';
 type QuizScope = 'recent' | 'all';
 
 const VOCAB_STORAGE_KEY = 'vocabulary-builder-data';
+const VOCAB_SYNC_CODES_KEY = 'vocabulary-sync-codes';
+
+type SyncCodeMap = Record<string, string>;
+
+const generateNumericCode = (length: number): string => {
+  const max = 10 ** length;
+  const code = Math.floor(Math.random() * max).toString();
+  return code.padStart(length, '0');
+};
+
+const loadSyncCodeMap = (): SyncCodeMap => {
+  if (typeof localStorage === 'undefined') {
+    return {};
+  }
+
+  try {
+    const raw = localStorage.getItem(VOCAB_SYNC_CODES_KEY);
+    if (!raw) {
+      return {};
+    }
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object') {
+      return parsed as SyncCodeMap;
+    }
+  } catch (error) {
+    console.error('Failed to load sync codes map from local storage:', error);
+  }
+
+  return {};
+};
+
+const saveSyncCodeMap = (map: SyncCodeMap) => {
+  if (typeof localStorage === 'undefined') {
+    return;
+  }
+
+  try {
+    localStorage.setItem(VOCAB_SYNC_CODES_KEY, JSON.stringify(map));
+  } catch (error) {
+    console.error('Failed to save sync codes map to local storage:', error);
+  }
+};
+
+const storeSyncCodePayload = (code: string, payload: string) => {
+  const map = loadSyncCodeMap();
+  map[code] = payload;
+  saveSyncCodeMap(map);
+};
+
+const resolveSyncCodePayload = (code: string): string | null => {
+  const map = loadSyncCodeMap();
+  return map[code] || null;
+};
 
 const generateId = (prefix: string) => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -136,11 +189,16 @@ const extractVocabularyFromLocation = () => {
 
   let encoded: string | null = null;
   let decodeFailed = false;
+  let codeParam: string | null = null;
 
   const currentUrl = new URL(window.location.href);
   if (currentUrl.searchParams.has('data')) {
     encoded = currentUrl.searchParams.get('data');
     currentUrl.searchParams.delete('data');
+  }
+  if (currentUrl.searchParams.has('code')) {
+    codeParam = currentUrl.searchParams.get('code');
+    currentUrl.searchParams.delete('code');
   }
 
   if (!encoded && window.location.hash.includes('data=')) {
@@ -151,6 +209,16 @@ const extractVocabularyFromLocation = () => {
       const newHash = hashParams.toString();
       currentUrl.hash = newHash ? `#${newHash}` : '';
     }
+    if (hashParams.has('code')) {
+      codeParam = hashParams.get('code');
+      hashParams.delete('code');
+      const newHash = hashParams.toString();
+      currentUrl.hash = newHash ? `#${newHash}` : '';
+    }
+  }
+
+  if (!encoded && codeParam && /^\d{6}$/.test(codeParam)) {
+    encoded = resolveSyncCodePayload(codeParam);
   }
 
   if (!encoded) {
@@ -165,6 +233,8 @@ const extractVocabularyFromLocation = () => {
   const importedItems = decodeVocabularyCode(encoded);
   if (importedItems.length === 0) {
     decodeFailed = true;
+  } else if (codeParam) {
+    storeSyncCodePayload(codeParam.padStart(6, '0'), encoded);
   }
 
   return {
@@ -173,6 +243,52 @@ const extractVocabularyFromLocation = () => {
     hadCode: true,
     decodeFailed,
   };
+};
+
+const extractPayloadFromInput = (input: string): { payload: string | null; code: string | null } => {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return { payload: null, code: null };
+  }
+
+  if (/^\d{6}$/.test(trimmed)) {
+    const payload = resolveSyncCodePayload(trimmed);
+    return { payload, code: payload ? trimmed : null };
+  }
+
+  try {
+    const potentialUrl = new URL(trimmed);
+    let payload: string | null = null;
+    let code: string | null = null;
+
+    if (potentialUrl.searchParams.has('data')) {
+      payload = potentialUrl.searchParams.get('data');
+    }
+    if (potentialUrl.searchParams.has('code')) {
+      code = potentialUrl.searchParams.get('code');
+    }
+
+    if (!payload && potentialUrl.hash.includes('data=')) {
+      const hashParams = new URLSearchParams(potentialUrl.hash.slice(1));
+      if (hashParams.has('data')) {
+        payload = hashParams.get('data');
+      }
+      if (hashParams.has('code')) {
+        code = hashParams.get('code');
+      }
+    }
+
+    if (payload) {
+      return {
+        payload,
+        code: code && /^\d{6}$/.test(code) ? code : null,
+      };
+    }
+  } catch (error) {
+    // Not a valid URL, fall back to raw payload.
+  }
+
+  return { payload: trimmed, code: null };
 };
 
 const App: React.FC = () => {
@@ -186,6 +302,7 @@ const App: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [importInput, setImportInput] = useState('');
   const [lastShareCode, setLastShareCode] = useState<string | null>(null);
+  const [lastShareLink, setLastShareLink] = useState<string | null>(null);
 
   const learnButtonRef = useRef<HTMLDivElement>(null);
 
@@ -296,18 +413,29 @@ const App: React.FC = () => {
     if (vocabulary.length === 0) {
       setShareStatus('Add a few words before creating a sync code.');
       setLastShareCode(null);
+      setLastShareLink(null);
       return;
     }
 
     try {
-      const code = encodeVocabularyForTransfer(vocabulary);
-      setLastShareCode(code);
+      const payload = encodeVocabularyForTransfer(vocabulary);
+      const shortCode = generateNumericCode(6);
+      storeSyncCodePayload(shortCode, payload);
+
+      let shareLink: string | null = null;
+      if (typeof window !== 'undefined') {
+        const baseUrl = `${window.location.origin}${window.location.pathname}`;
+        shareLink = `${baseUrl}?code=${shortCode}&data=${encodeURIComponent(payload)}`;
+      }
+
+      setLastShareCode(shortCode);
+      setLastShareLink(shareLink);
 
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        await navigator.clipboard.writeText(code);
-        setShareStatus('Sync code copied to clipboard. Paste it into the app on your other device.');
+        await navigator.clipboard.writeText(shortCode);
+        setShareStatus('Sync code copied. Share this code and the link below to import your words on another device.');
       } else {
-        setShareStatus('Copy the sync code shown below and paste it into the app on your other device.');
+        setShareStatus('Copy the sync code and link shown below and paste them into the app on your other device.');
       }
     } catch (error) {
       console.error('Failed to create sync code:', error);
@@ -322,6 +450,42 @@ const App: React.FC = () => {
     setImportStatus(null);
   };
 
+  const handleCopySyncCode = async () => {
+    if (!lastShareCode) {
+      return;
+    }
+
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(lastShareCode);
+        setShareStatus('Sync code copied.');
+      } else {
+        setShareStatus('Select and copy the sync code manually.');
+      }
+    } catch (error) {
+      console.error('Failed to copy sync code:', error);
+      setShareStatus('Unable to copy the sync code. Please try again.');
+    }
+  };
+
+  const handleCopyShareLink = async () => {
+    if (!lastShareLink) {
+      return;
+    }
+
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(lastShareLink);
+        setShareStatus('Share link copied.');
+      } else {
+        setShareStatus('Select and copy the share link manually.');
+      }
+    } catch (error) {
+      console.error('Failed to copy share link:', error);
+      setShareStatus('Unable to copy the share link. Please try again.');
+    }
+  };
+
   const handleImportSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setImportStatus(null);
@@ -329,14 +493,24 @@ const App: React.FC = () => {
 
     const trimmedInput = importInput.trim();
     if (!trimmedInput) {
-      setImportError('Paste a sync code to import your vocabulary.');
+      setImportError('Enter a sync code or backup link to import your vocabulary.');
       return;
     }
 
-    const importedItems = decodeVocabularyCode(trimmedInput);
+    const { payload, code } = extractPayloadFromInput(trimmedInput);
+    if (!payload) {
+      setImportError('The sync code is invalid or expired.');
+      return;
+    }
+
+    const importedItems = decodeVocabularyCode(payload);
     if (importedItems.length === 0) {
       setImportError('The sync code is invalid or empty.');
       return;
+    }
+
+    if (code) {
+      storeSyncCodePayload(code.padStart(6, '0'), payload);
     }
 
     let addedCount = 0;
@@ -510,30 +684,66 @@ const App: React.FC = () => {
           </div>
 
           {lastShareCode && (
-            <div className="mt-4">
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                Your sync code
-              </label>
-              <textarea
-                value={lastShareCode}
-                readOnly
-                className="w-full h-32 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
-              />
-              <p className="text-xs text-slate-500 mt-2">
-                Keep this code private. It contains all of your vocabulary words.
-              </p>
+            <div className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                  6-digit sync code
+                </label>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    value={lastShareCode}
+                    readOnly
+                    className="w-full sm:max-w-xs px-3 py-2 font-mono text-sm bg-white border border-indigo-200 rounded-md text-slate-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopySyncCode}
+                    className="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                  >
+                    Copy code
+                  </button>
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Share this short code together with the backup link below to restore your vocabulary elsewhere.
+                </p>
+              </div>
+
+              {lastShareLink && (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                    Backup link
+                  </label>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <textarea
+                      value={lastShareLink}
+                      readOnly
+                      className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopyShareLink}
+                      className="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                      Copy link
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Open this link on your phone or computer, then enter the sync code when prompted.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
           {isImportOpen && (
             <form onSubmit={handleImportSubmit} className="mt-4 space-y-3">
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Paste sync code
+                Paste sync code or backup link
               </label>
               <textarea
                 value={importInput}
                 onChange={(event) => setImportInput(event.target.value)}
-                placeholder="Paste the sync code from another device here"
+                placeholder="Enter the 6-digit sync code or paste the shared backup link"
                 className="w-full h-32 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <div className="flex justify-end gap-2">
