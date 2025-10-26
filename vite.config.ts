@@ -6,7 +6,7 @@ const homepage = typeof packageJson.homepage === 'string' ? packageJson.homepage
 
 const derivedBase = (() => {
   if (!homepage || homepage.includes('<')) {
-    return '/';
+    return './';
   }
 
   try {
@@ -14,11 +14,11 @@ const derivedBase = (() => {
     const cleanPath = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;
     return cleanPath === '//' ? '/' : cleanPath;
   } catch (error) {
-    return '/';
+    return './';
   }
 })();
 
 export default defineConfig({
   plugins: [react()],
-  base: process.env.VITE_BASE_PATH ?? derivedBase ?? '/',
+  base: process.env.VITE_BASE_PATH ?? derivedBase ?? './',
 });

@@ -66,6 +66,26 @@ Ce projet est déjà configuré pour être publié sur GitHub Pages via la branc
    - Dans les paramètres du dépôt, section **Pages**, choisissez la branche `gh-pages` et le dossier `/ (root)`.
    - Une fois la page active, votre application sera disponible à l'adresse renseignée dans `homepage`.
 
+## 🔗 Partager l'application sans compte Vercel
+
+Tout le monde peut accéder à la mission via un simple lien, sans se connecter à Vercel :
+
+1. **Construire la version finale**
+
+   ```bash
+   npm run build
+   ```
+
+   Les fichiers statiques prêts à l'emploi se trouvent dans le dossier `dist`.
+
+2. **Héberger le dossier `dist` où vous voulez**
+   - **GitHub Pages** (voir ci-dessus) ou tout autre service de pages statiques comme Netlify, Render, Cloudflare Pages, etc.
+   - **Hébergement manuel** : uploadez le contenu de `dist` sur un serveur web ou glissez-le dans un dossier partagé (Google Drive, Dropbox…) en activant l'hébergement statique.
+
+3. **Partager l'URL obtenue**
+
+   Grâce à la configuration du projet, tous les chemins sont relatifs : il suffit donc d'ouvrir `dist/index.html` pour que l'application fonctionne, même en local (double-clic sur le fichier), sans authentification.
+
 ## 🔧 Personnalisation rapide
 
 - Pour modifier le nombre de questions ou la plage des tables, ajustez les constantes situées en haut de `src/App.tsx`.
