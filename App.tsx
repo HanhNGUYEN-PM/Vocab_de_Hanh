@@ -66,6 +66,28 @@ const resolveSyncCodePayload = (code: string): string | null => {
   return map[code] || null;
 };
 
+const formatSyncPackage = (code: string, payload: string): string => `${code}:${payload}`;
+
+const parseSyncPackage = (
+  value: string,
+): { code: string | null; payload: string | null } => {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return { code: null, payload: null };
+  }
+
+  const match = trimmed.match(/^(\d{6})[:|](.+)$/);
+  if (match) {
+    const [, code, payload] = match;
+    return {
+      code,
+      payload: payload || null,
+    };
+  }
+
+  return { code: null, payload: null };
+};
+
 const generateId = (prefix: string) => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID();
@@ -251,6 +273,14 @@ const extractPayloadFromInput = (input: string): { payload: string | null; code:
     return { payload: null, code: null };
   }
 
+  const packageResult = parseSyncPackage(trimmed);
+  if (packageResult.payload) {
+    return {
+      payload: packageResult.payload,
+      code: packageResult.code,
+    };
+  }
+
   if (/^\d{6}$/.test(trimmed)) {
     const payload = resolveSyncCodePayload(trimmed);
     return { payload, code: payload ? trimmed : null };
@@ -302,7 +332,7 @@ const App: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [importInput, setImportInput] = useState('');
   const [lastShareCode, setLastShareCode] = useState<string | null>(null);
-  const [lastShareLink, setLastShareLink] = useState<string | null>(null);
+  const [lastSharePayload, setLastSharePayload] = useState<string | null>(null);
 
   const learnButtonRef = useRef<HTMLDivElement>(null);
 
@@ -413,7 +443,7 @@ const App: React.FC = () => {
     if (vocabulary.length === 0) {
       setShareStatus('Add a few words before creating a sync code.');
       setLastShareCode(null);
-      setLastShareLink(null);
+      setLastSharePayload(null);
       return;
     }
 
@@ -421,21 +451,15 @@ const App: React.FC = () => {
       const payload = encodeVocabularyForTransfer(vocabulary);
       const shortCode = generateNumericCode(6);
       storeSyncCodePayload(shortCode, payload);
-
-      let shareLink: string | null = null;
-      if (typeof window !== 'undefined') {
-        const baseUrl = `${window.location.origin}${window.location.pathname}`;
-        shareLink = `${baseUrl}?code=${shortCode}&data=${encodeURIComponent(payload)}`;
-      }
-
+      const sharePackage = formatSyncPackage(shortCode, payload);
       setLastShareCode(shortCode);
-      setLastShareLink(shareLink);
+      setLastSharePayload(payload);
 
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        await navigator.clipboard.writeText(shortCode);
-        setShareStatus('Sync code copied. Share this code and the link below to import your words on another device.');
+        await navigator.clipboard.writeText(sharePackage);
+        setShareStatus('Sync package copied. Paste it into the app on your other device to restore your words.');
       } else {
-        setShareStatus('Copy the sync code and link shown below and paste them into the app on your other device.');
+        setShareStatus('Copy the sync code and sync package shown below to use them on another device.');
       }
     } catch (error) {
       console.error('Failed to create sync code:', error);
@@ -451,38 +475,20 @@ const App: React.FC = () => {
   };
 
   const handleCopySyncCode = async () => {
-    if (!lastShareCode) {
+    if (!lastShareCode || !lastSharePayload) {
       return;
     }
 
     try {
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        await navigator.clipboard.writeText(lastShareCode);
-        setShareStatus('Sync code copied.');
+        await navigator.clipboard.writeText(formatSyncPackage(lastShareCode, lastSharePayload));
+        setShareStatus('Sync package copied.');
       } else {
-        setShareStatus('Select and copy the sync code manually.');
+        setShareStatus('Select and copy the sync code and sync package manually.');
       }
     } catch (error) {
       console.error('Failed to copy sync code:', error);
       setShareStatus('Unable to copy the sync code. Please try again.');
-    }
-  };
-
-  const handleCopyShareLink = async () => {
-    if (!lastShareLink) {
-      return;
-    }
-
-    try {
-      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        await navigator.clipboard.writeText(lastShareLink);
-        setShareStatus('Share link copied.');
-      } else {
-        setShareStatus('Select and copy the share link manually.');
-      }
-    } catch (error) {
-      console.error('Failed to copy share link:', error);
-      setShareStatus('Unable to copy the share link. Please try again.');
     }
   };
 
@@ -493,7 +499,7 @@ const App: React.FC = () => {
 
     const trimmedInput = importInput.trim();
     if (!trimmedInput) {
-      setImportError('Enter a sync code or backup link to import your vocabulary.');
+      setImportError('Enter a sync code or paste the copied sync package to import your vocabulary.');
       return;
     }
 
@@ -683,7 +689,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          {lastShareCode && (
+          {lastShareCode && lastSharePayload && (
             <div className="mt-4 space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
@@ -704,46 +710,35 @@ const App: React.FC = () => {
                   </button>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  Share this short code together with the backup link below to restore your vocabulary elsewhere.
+                  Use the copy button to share your words. The copied text already includes everything needed for import.
                 </p>
               </div>
 
-              {lastShareLink && (
-                <div>
-                  <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                    Backup link
-                  </label>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <textarea
-                      value={lastShareLink}
-                      readOnly
-                      className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleCopyShareLink}
-                      className="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                      Copy link
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">
-                    Open this link on your phone or computer, then enter the sync code when prompted.
-                  </p>
-                </div>
-              )}
+              <div>
+                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                  Sync package text
+                </label>
+                <textarea
+                  value={formatSyncPackage(lastShareCode, lastSharePayload)}
+                  readOnly
+                  className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
+                />
+                <p className="text-xs text-slate-500 mt-2">
+                  Share the copied text as-is with another device. Typing only the digits will not restore your words.
+                </p>
+              </div>
             </div>
           )}
 
           {isImportOpen && (
             <form onSubmit={handleImportSubmit} className="mt-4 space-y-3">
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Paste sync code or backup link
+                Paste sync package or 6-digit code
               </label>
               <textarea
                 value={importInput}
                 onChange={(event) => setImportInput(event.target.value)}
-                placeholder="Enter the 6-digit sync code or paste the shared backup link"
+                placeholder="Paste the copied sync package (recommended) or enter the 6-digit sync code"
                 className="w-full h-32 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <div className="flex justify-end gap-2">
