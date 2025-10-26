@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 const TOTAL_QUESTIONS = 10;
 const SCORE_LOG_STORAGE_KEY = 'capitaine-calcul-score-log';
+const MAX_SCORE_LOG_ENTRIES = 6;
 
 const POSITIVE_MESSAGES = [
   'Bravo Florian, super héros des chiffres !',
@@ -74,7 +75,48 @@ const formatLogDate = (isoDate: string) => {
     hour: '2-digit',
     minute: '2-digit',
   });
-  return formatter.format(new Date(isoDate));
+
+  try {
+    const date = new Date(isoDate);
+    if (Number.isNaN(date.getTime())) {
+      throw new Error('Invalid date');
+    }
+    return formatter.format(date);
+  } catch (error) {
+    console.warn('Date de score invalide, affichage simplifié :', isoDate, error);
+    return 'Score précédent';
+  }
+};
+
+const sanitiseScoreLogEntry = (entry: unknown, index: number, fallbackSeed: number): ScoreLogEntry | null => {
+  if (typeof entry !== 'object' || entry === null) {
+    return null;
+  }
+
+  const raw = entry as Record<string, unknown>;
+  const score = Number(raw.score);
+  const total = Number(raw.total ?? TOTAL_QUESTIONS);
+
+  if (!Number.isFinite(score) || !Number.isFinite(total)) {
+    return null;
+  }
+
+  const id = typeof raw.id === 'string' && raw.id.trim().length > 0
+    ? raw.id
+    : `legacy-${fallbackSeed}-${index}`;
+
+  const rawDate = typeof raw.playedAt === 'string' ? raw.playedAt : '';
+  const parsedDate = rawDate ? new Date(rawDate) : null;
+  const playedAt = parsedDate && !Number.isNaN(parsedDate.getTime())
+    ? parsedDate.toISOString()
+    : new Date(fallbackSeed - index * 60_000).toISOString();
+
+  return {
+    id,
+    playedAt,
+    score,
+    total,
+  };
 };
 
 const readStoredScoreLog = (): ScoreLogEntry[] => {
@@ -93,7 +135,12 @@ const readStoredScoreLog = (): ScoreLogEntry[] => {
       return [];
     }
 
-    return parsed.filter(entry => typeof entry?.playedAt === 'string' && typeof entry?.score === 'number');
+    const fallbackSeed = Date.now();
+
+    return parsed
+      .map((entry, index) => sanitiseScoreLogEntry(entry, index, fallbackSeed))
+      .filter((entry): entry is ScoreLogEntry => Boolean(entry))
+      .slice(0, MAX_SCORE_LOG_ENTRIES);
   } catch (error) {
     console.error('Impossible de lire le registre des scores :', error);
     return [];
@@ -172,7 +219,7 @@ const App: React.FC = () => {
         total: TOTAL_QUESTIONS,
       };
 
-      setScoreLog(prev => [logEntry, ...prev].slice(0, 6));
+      setScoreLog(prev => [logEntry, ...prev].slice(0, MAX_SCORE_LOG_ENTRIES));
       setQuizFinished(true);
     } else {
       setCurrentQuestion(createQuestion());
