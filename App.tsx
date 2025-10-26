@@ -72,25 +72,6 @@ const resolveSyncCodePayload = (code: string): string | null => {
 
 const formatSyncPackage = (code: string, payload: string): string => `${code}:${payload}`;
 
-const encodeHiddenPayload = (payload: string): string => {
-  try {
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(payload);
-    let bits = '';
-
-    bytes.forEach(byte => {
-      bits += byte.toString(2).padStart(8, '0');
-    });
-
-    return bits
-      .replace(/0/g, ZERO_WIDTH_ZERO)
-      .replace(/1/g, ZERO_WIDTH_ONE);
-  } catch (error) {
-    console.error('Failed to encode hidden payload:', error);
-    return '';
-  }
-};
-
 const decodeHiddenPayload = (value: string): string | null => {
   const matches = value.match(new RegExp(`[${ZERO_WIDTH_ZERO}${ZERO_WIDTH_ONE}]`, 'g'));
   if (!matches || matches.length === 0) {
@@ -130,8 +111,6 @@ const decodeHiddenPayload = (value: string): string | null => {
     return null;
   }
 };
-
-const buildShareToken = (code: string, payload: string): string => `${code}${encodeHiddenPayload(payload)}`;
 
 const stripHiddenCharacters = (value: string): string => value.replace(ZERO_WIDTH_PATTERN, '');
 
@@ -412,7 +391,7 @@ const App: React.FC = () => {
   const [importInput, setImportInput] = useState('');
   const [lastShareCode, setLastShareCode] = useState<string | null>(null);
   const [lastSharePayload, setLastSharePayload] = useState<string | null>(null);
-  const [lastShareToken, setLastShareToken] = useState<string | null>(null);
+  const [lastSharePackage, setLastSharePackage] = useState<string | null>(null);
   const [isPackageVisible, setIsPackageVisible] = useState(false);
   const [isSyncCollapsed, setIsSyncCollapsed] = useState(false);
 
@@ -548,7 +527,7 @@ const App: React.FC = () => {
       setShareStatus('Add a few words before creating a sync code.');
       setLastShareCode(null);
       setLastSharePayload(null);
-      setLastShareToken(null);
+      setLastSharePackage(null);
       return;
     }
 
@@ -556,18 +535,19 @@ const App: React.FC = () => {
       const payload = encodeVocabularyForTransfer(vocabulary);
       const shortCode = generateNumericCode(6);
       storeSyncCodePayload(shortCode, payload);
-      const shareToken = buildShareToken(shortCode, payload);
+      const sharePackage = formatSyncPackage(shortCode, payload);
       setLastShareCode(shortCode);
       setLastSharePayload(payload);
-      setLastShareToken(shareToken);
+      setLastSharePackage(sharePackage);
       setIsPackageVisible(false);
       setIsSyncCollapsed(false);
 
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        await navigator.clipboard.writeText(shareToken);
-        setShareStatus('Sync code copied. Paste the digits into the app on your other device to restore your words.');
+        await navigator.clipboard.writeText(sharePackage);
+        setShareStatus('Sync package copied. Paste the entire string into the import form on your other device.');
       } else {
-        setShareStatus('Copy the sync code shown below. The hidden data travels with the digits when you paste them.');
+        setIsPackageVisible(true);
+        setShareStatus('Copy the sync package text below and paste it into the import form on your other device.');
       }
     } catch (error) {
       console.error('Failed to create sync code:', error);
@@ -590,15 +570,16 @@ const App: React.FC = () => {
 
     try {
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        const token = lastShareToken ?? buildShareToken(lastShareCode, lastSharePayload);
-        await navigator.clipboard.writeText(token);
-        setShareStatus('Sync code copied. Paste it into the app on your other device.');
+        const packageText = lastSharePackage ?? formatSyncPackage(lastShareCode, lastSharePayload);
+        await navigator.clipboard.writeText(packageText);
+        setShareStatus('Sync package copied. Paste the entire string into the import form on your other device.');
       } else {
-        setShareStatus('Select and copy the sync code manually.');
+        setIsPackageVisible(true);
+        setShareStatus('Select and copy the sync package text manually.');
       }
     } catch (error) {
-      console.error('Failed to copy sync code:', error);
-      setShareStatus('Unable to copy the sync code. Please try again.');
+      console.error('Failed to copy sync package:', error);
+      setShareStatus('Unable to copy the sync package. Please try again.');
     }
   };
 
@@ -609,19 +590,19 @@ const App: React.FC = () => {
 
     const trimmedInput = importInput.trim();
     if (!trimmedInput) {
-      setImportError('Enter a sync code or paste the copied sync package to import your vocabulary.');
+      setImportError('Paste the sync package text that was copied when you created the code.');
       return;
     }
 
     const { payload, code } = extractPayloadFromInput(trimmedInput);
     if (!payload) {
-      setImportError('The sync code is invalid or incomplete. Use the copy button or reveal the sync package text.');
+      setImportError('The sync package is invalid or incomplete. Make sure you pasted the entire string.');
       return;
     }
 
     const importedItems = decodeVocabularyCode(payload);
     if (importedItems.length === 0) {
-      setImportError('The sync code is invalid or empty.');
+      setImportError('The sync package is invalid or empty.');
       return;
     }
 
@@ -779,7 +760,7 @@ const App: React.FC = () => {
                 <div className="flex-1">
                   <h2 className="text-lg font-semibold text-indigo-900">Stay in sync across devices</h2>
                   <p className="text-sm text-indigo-800 mt-1">
-                    Create a sync code to back up your words and paste it into the app on another device.
+                    Create a sync code to back up your words, then paste the copied sync package on another device to restore them.
                   </p>
                 </div>
                 <button
@@ -800,13 +781,13 @@ const App: React.FC = () => {
                   onClick={handleCreateSyncCode}
                   className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  Copy sync code
+                  Create sync code
                 </button>
                 <button
                   onClick={toggleImportSection}
                   className="px-4 py-2 bg-white text-indigo-700 font-semibold rounded-md shadow hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  {isImportOpen ? 'Close import' : 'Import sync code'}
+                  {isImportOpen ? 'Close import' : 'Import sync package'}
                 </button>
               </div>
 
@@ -843,11 +824,11 @@ const App: React.FC = () => {
                             onClick={handleCopySyncCode}
                             className="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                           >
-                            Copy code
+                            Copy sync package
                           </button>
                         </div>
                         <p className="text-xs text-slate-500 mt-2">
-                          Use the copy button to share your words. The digits you paste include the hidden backup data.
+                          Use the buttons to copy the sync package. Paste the full string into the import form on your other device.
                         </p>
                       </div>
 
@@ -857,7 +838,7 @@ const App: React.FC = () => {
                           onClick={() => setIsPackageVisible(prev => !prev)}
                           className="px-3 py-2 bg-white text-indigo-700 text-xs font-semibold rounded-md border border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         >
-                          {isPackageVisible ? 'Hide sync package text' : 'Show sync package text (manual fallback)'}
+                          {isPackageVisible ? 'Hide sync package text' : 'Show sync package text (copy manually)'}
                         </button>
                         {isPackageVisible && (
                           <div>
@@ -867,7 +848,7 @@ const App: React.FC = () => {
                               className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
                             />
                             <p className="text-xs text-slate-500 mt-2">
-                              Use this only if your messaging app removes hidden characters. Paste the entire string on the other device.
+                              Copy and send this string if needed. Paste the entire text into the import form on the other device.
                             </p>
                           </div>
                         )}
@@ -878,12 +859,12 @@ const App: React.FC = () => {
                   {isImportOpen && (
                     <form onSubmit={handleImportSubmit} className="space-y-3">
                       <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                        Paste copied sync code or reveal the package text
+                        Paste the sync package text you copied
                       </label>
                       <textarea
                         value={importInput}
                         onChange={(event) => setImportInput(event.target.value)}
-                        placeholder="Paste the copied sync code (just the digits) or, if needed, paste the revealed sync package text"
+                        placeholder="Paste the sync package string (for example: 123456:eyJ2b2NhYiI6Wy4uLl0=)"
                         className="w-full h-32 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       <div className="flex justify-end gap-2">
