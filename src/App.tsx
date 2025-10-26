@@ -241,7 +241,11 @@ const App: React.FC = () => {
       return;
     }
 
-    window.localStorage.setItem(SCORE_LOG_STORAGE_KEY, JSON.stringify(scoreLog));
+    try {
+      window.localStorage.setItem(SCORE_LOG_STORAGE_KEY, JSON.stringify(scoreLog));
+    } catch (error) {
+      console.error("Impossible d'enregistrer le journal des scores :", error);
+    }
   }, [scoreLog]);
 
   const progressPercent = quizFinished
