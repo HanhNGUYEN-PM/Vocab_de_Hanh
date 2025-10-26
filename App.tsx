@@ -14,6 +14,10 @@ type QuizScope = 'recent' | 'all';
 const VOCAB_STORAGE_KEY = 'vocabulary-builder-data';
 const VOCAB_SYNC_CODES_KEY = 'vocabulary-sync-codes';
 
+const ZERO_WIDTH_ZERO = '\u200B';
+const ZERO_WIDTH_ONE = '\u200C';
+const ZERO_WIDTH_PATTERN = new RegExp(`[${ZERO_WIDTH_ZERO}${ZERO_WIDTH_ONE}]`, 'g');
+
 type SyncCodeMap = Record<string, string>;
 
 const generateNumericCode = (length: number): string => {
@@ -67,6 +71,69 @@ const resolveSyncCodePayload = (code: string): string | null => {
 };
 
 const formatSyncPackage = (code: string, payload: string): string => `${code}:${payload}`;
+
+const encodeHiddenPayload = (payload: string): string => {
+  try {
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(payload);
+    let bits = '';
+
+    bytes.forEach(byte => {
+      bits += byte.toString(2).padStart(8, '0');
+    });
+
+    return bits
+      .replace(/0/g, ZERO_WIDTH_ZERO)
+      .replace(/1/g, ZERO_WIDTH_ONE);
+  } catch (error) {
+    console.error('Failed to encode hidden payload:', error);
+    return '';
+  }
+};
+
+const decodeHiddenPayload = (value: string): string | null => {
+  const matches = value.match(new RegExp(`[${ZERO_WIDTH_ZERO}${ZERO_WIDTH_ONE}]`, 'g'));
+  if (!matches || matches.length === 0) {
+    return null;
+  }
+
+  const bits = matches
+    .map(char => {
+      if (char === ZERO_WIDTH_ZERO) {
+        return '0';
+      }
+      if (char === ZERO_WIDTH_ONE) {
+        return '1';
+      }
+      return '';
+    })
+    .join('');
+
+  if (bits.length === 0 || bits.length % 8 !== 0) {
+    return null;
+  }
+
+  const byteValues: number[] = [];
+  for (let index = 0; index < bits.length; index += 8) {
+    const slice = bits.slice(index, index + 8);
+    if (slice.length < 8) {
+      return null;
+    }
+    byteValues.push(parseInt(slice, 2));
+  }
+
+  try {
+    const decoder = new TextDecoder();
+    return decoder.decode(new Uint8Array(byteValues));
+  } catch (error) {
+    console.error('Failed to decode hidden payload:', error);
+    return null;
+  }
+};
+
+const buildShareToken = (code: string, payload: string): string => `${code}${encodeHiddenPayload(payload)}`;
+
+const stripHiddenCharacters = (value: string): string => value.replace(ZERO_WIDTH_PATTERN, '');
 
 const parseSyncPackage = (
   value: string,
@@ -273,6 +340,18 @@ const extractPayloadFromInput = (input: string): { payload: string | null; code:
     return { payload: null, code: null };
   }
 
+  const hiddenPayload = decodeHiddenPayload(trimmed);
+  if (hiddenPayload) {
+    const sanitized = stripHiddenCharacters(trimmed);
+    const codeMatch = sanitized.match(/\d{6}/);
+    if (codeMatch) {
+      return {
+        payload: hiddenPayload,
+        code: codeMatch[0],
+      };
+    }
+  }
+
   const packageResult = parseSyncPackage(trimmed);
   if (packageResult.payload) {
     return {
@@ -333,6 +412,8 @@ const App: React.FC = () => {
   const [importInput, setImportInput] = useState('');
   const [lastShareCode, setLastShareCode] = useState<string | null>(null);
   const [lastSharePayload, setLastSharePayload] = useState<string | null>(null);
+  const [lastShareToken, setLastShareToken] = useState<string | null>(null);
+  const [isPackageVisible, setIsPackageVisible] = useState(false);
 
   const learnButtonRef = useRef<HTMLDivElement>(null);
 
@@ -402,6 +483,8 @@ const App: React.FC = () => {
     setImportStatus(null);
     setImportError(null);
     setLastShareCode(null);
+    setLastShareToken(null);
+    setIsPackageVisible(false);
 
     setVocabulary(prevVocabulary => {
       const updatedVocabulary = [...prevVocabulary, ...newItems];
@@ -444,6 +527,7 @@ const App: React.FC = () => {
       setShareStatus('Add a few words before creating a sync code.');
       setLastShareCode(null);
       setLastSharePayload(null);
+      setLastShareToken(null);
       return;
     }
 
@@ -451,15 +535,17 @@ const App: React.FC = () => {
       const payload = encodeVocabularyForTransfer(vocabulary);
       const shortCode = generateNumericCode(6);
       storeSyncCodePayload(shortCode, payload);
-      const sharePackage = formatSyncPackage(shortCode, payload);
+      const shareToken = buildShareToken(shortCode, payload);
       setLastShareCode(shortCode);
       setLastSharePayload(payload);
+      setLastShareToken(shareToken);
+      setIsPackageVisible(false);
 
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        await navigator.clipboard.writeText(sharePackage);
-        setShareStatus('Sync package copied. Paste it into the app on your other device to restore your words.');
+        await navigator.clipboard.writeText(shareToken);
+        setShareStatus('Sync code copied. Paste the digits into the app on your other device to restore your words.');
       } else {
-        setShareStatus('Copy the sync code and sync package shown below to use them on another device.');
+        setShareStatus('Copy the sync code shown below. The hidden data travels with the digits when you paste them.');
       }
     } catch (error) {
       console.error('Failed to create sync code:', error);
@@ -481,10 +567,11 @@ const App: React.FC = () => {
 
     try {
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-        await navigator.clipboard.writeText(formatSyncPackage(lastShareCode, lastSharePayload));
-        setShareStatus('Sync package copied.');
+        const token = lastShareToken ?? buildShareToken(lastShareCode, lastSharePayload);
+        await navigator.clipboard.writeText(token);
+        setShareStatus('Sync code copied. Paste it into the app on your other device.');
       } else {
-        setShareStatus('Select and copy the sync code and sync package manually.');
+        setShareStatus('Select and copy the sync code manually.');
       }
     } catch (error) {
       console.error('Failed to copy sync code:', error);
@@ -505,7 +592,7 @@ const App: React.FC = () => {
 
     const { payload, code } = extractPayloadFromInput(trimmedInput);
     if (!payload) {
-      setImportError('The sync code is invalid or expired.');
+      setImportError('The sync code is invalid or incomplete. Use the copy button or reveal the sync package text.');
       return;
     }
 
@@ -710,22 +797,30 @@ const App: React.FC = () => {
                   </button>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">
-                  Use the copy button to share your words. The copied text already includes everything needed for import.
+                  Use the copy button to share your words. The digits you paste include the hidden backup data.
                 </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                  Sync package text
-                </label>
-                <textarea
-                  value={formatSyncPackage(lastShareCode, lastSharePayload)}
-                  readOnly
-                  className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
-                />
-                <p className="text-xs text-slate-500 mt-2">
-                  Share the copied text as-is with another device. Typing only the digits will not restore your words.
-                </p>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setIsPackageVisible(prev => !prev)}
+                  className="px-3 py-2 bg-white text-indigo-700 text-xs font-semibold rounded-md border border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  {isPackageVisible ? 'Hide sync package text' : 'Show sync package text (manual fallback)'}
+                </button>
+                {isPackageVisible && (
+                  <div>
+                    <textarea
+                      value={formatSyncPackage(lastShareCode, lastSharePayload)}
+                      readOnly
+                      className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
+                    />
+                    <p className="text-xs text-slate-500 mt-2">
+                      Use this only if your messaging app removes hidden characters. Paste the entire string on the other device.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -733,12 +828,12 @@ const App: React.FC = () => {
           {isImportOpen && (
             <form onSubmit={handleImportSubmit} className="mt-4 space-y-3">
               <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Paste sync package or 6-digit code
+                Paste copied sync code or reveal the package text
               </label>
               <textarea
                 value={importInput}
                 onChange={(event) => setImportInput(event.target.value)}
-                placeholder="Paste the copied sync package (recommended) or enter the 6-digit sync code"
+                placeholder="Paste the copied sync code (just the digits) or, if needed, paste the revealed sync package text"
                 className="w-full h-32 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <div className="flex justify-end gap-2">
