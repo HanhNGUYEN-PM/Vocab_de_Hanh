@@ -409,7 +409,6 @@ const App = () => {
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const [streak, setStreak] = useState(0);
   const [scoreLog, setScoreLog] = useState<ScoreLogEntry[]>(() => readStoredScoreLog());
-  const [currentFillSelection, setCurrentFillSelection] = useState('');
 
   const currentCategory = CATEGORY_CONFIGS[selectedCategoryId];
   const subjectMessages = SUBJECT_MESSAGES[currentCategory.subject];
@@ -426,7 +425,6 @@ const App = () => {
     setQuizFinished(false);
     setLastResult(null);
     setStreak(0);
-    setCurrentFillSelection('');
   };
 
   const handleAnswer = (choice: string) => {
@@ -573,12 +571,6 @@ const App = () => {
 
   const resolvedCurrentQuestion = quizFinished ? null : currentQuestion;
 
-  useEffect(() => {
-    if (resolvedCurrentQuestion?.kind === 'fill-in') {
-      setCurrentFillSelection('');
-    }
-  }, [resolvedCurrentQuestion?.id]);
-
   return (
     <div className="app">
       <main className="game-card">
@@ -692,39 +684,13 @@ const App = () => {
                   ) : (
                     <p className="sentence-with-blank">
                       {resolvedCurrentQuestion.sentence.split('___').map((part, partIndex, parts) => (
-                        <span key={`part-${partIndex}`}>
+                        <span key={`part-${partIndex}`} className="sentence-part">
                           {part}
                           {partIndex < parts.length - 1 && (
-                            <span className="sentence-blank">
-                              <label
-                                className="visually-hidden"
-                                htmlFor={`fill-select-${resolvedCurrentQuestion.id}`}
-                              >
-                                {currentCategory.questionInstruction}
-                              </label>
-                              <select
-                                key={resolvedCurrentQuestion.id}
-                                id={`fill-select-${resolvedCurrentQuestion.id}`}
-                                className="fill-select"
-                                value={currentFillSelection}
-                                onChange={event => {
-                                  const value = event.target.value;
-                                  setCurrentFillSelection(value);
-                                  if (value) {
-                                    handleAnswer(value);
-                                  }
-                                }}
-                              >
-                                <option value="" disabled>
-                                  Choisis la bonne réponse
-                                </option>
-                                {resolvedCurrentQuestion.options.map(option => (
-                                  <option key={option} value={option}>
-                                    {option}
-                                  </option>
-                                ))}
-                              </select>
-                            </span>
+                            <>
+                              <span className="sentence-blank" aria-hidden="true">______</span>
+                              <span className="visually-hidden">Zone à compléter</span>
+                            </>
                           )}
                         </span>
                       ))}
@@ -734,20 +700,29 @@ const App = () => {
 
                 <p className="question-instruction">{currentCategory.questionInstruction}</p>
 
-                {resolvedCurrentQuestion.kind === 'multiplication' ? (
-                  <div className="options-grid">
-                    {resolvedCurrentQuestion.options.map(option => (
-                      <button
-                        type="button"
-                        key={option}
-                        className="option-button"
-                        onClick={() => handleAnswer(String(option))}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
+                <div className="options-grid">
+                  {resolvedCurrentQuestion.kind === 'multiplication'
+                    ? resolvedCurrentQuestion.options.map(option => (
+                        <button
+                          type="button"
+                          key={option}
+                          className="option-button"
+                          onClick={() => handleAnswer(String(option))}
+                        >
+                          {option}
+                        </button>
+                      ))
+                    : resolvedCurrentQuestion.options.map(option => (
+                        <button
+                          type="button"
+                          key={option}
+                          className="option-button"
+                          onClick={() => handleAnswer(option)}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                </div>
               </div>
             ) : null}
           </section>
