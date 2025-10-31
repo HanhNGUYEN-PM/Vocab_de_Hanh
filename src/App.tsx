@@ -149,6 +149,16 @@ const ET_EST_TEMPLATES: readonly FillInTemplate[] = [
   { id: 'et-est-8', sentence: 'Ce jeu ___ facile pour Florian.', correctAnswer: 'est', options: ['et', 'est'] },
   { id: 'et-est-9', sentence: 'Il rit ___ court partout.', correctAnswer: 'et', options: ['et', 'est'] },
   { id: 'et-est-10', sentence: 'Le robot ___ prêt à aider.', correctAnswer: 'est', options: ['et', 'est'] },
+  { id: 'et-est-11', sentence: 'Florian ___ son frère construisent une cabane.', correctAnswer: 'et', options: ['et', 'est'] },
+  { id: 'et-est-12', sentence: 'Le ciel ___ rempli de nuages.', correctAnswer: 'est', options: ['et', 'est'] },
+  { id: 'et-est-13', sentence: "Il faut être patient ___ calme pour réussir.", correctAnswer: 'et', options: ['et', 'est'] },
+  { id: 'et-est-14', sentence: 'La soupe ___ trop chaude pour être servie.', correctAnswer: 'est', options: ['et', 'est'] },
+  { id: 'et-est-15', sentence: 'Les amis de Florian jouent ___ rient ensemble.', correctAnswer: 'et', options: ['et', 'est'] },
+  { id: 'et-est-16', sentence: 'La fusée ___ prête au décollage.', correctAnswer: 'est', options: ['et', 'est'] },
+  { id: 'et-est-17', sentence: 'Il aime lire ___ écrire des histoires.', correctAnswer: 'et', options: ['et', 'est'] },
+  { id: 'et-est-18', sentence: 'Le chien ___ le chat dorment sur le canapé.', correctAnswer: 'et', options: ['et', 'est'] },
+  { id: 'et-est-19', sentence: 'La marelle ___ un jeu amusant.', correctAnswer: 'est', options: ['et', 'est'] },
+  { id: 'et-est-20', sentence: 'Florian ___ Mila terminent le puzzle.', correctAnswer: 'et', options: ['et', 'est'] },
 ];
 
 const A_A_TEMPLATES: readonly FillInTemplate[] = [
@@ -162,6 +172,16 @@ const A_A_TEMPLATES: readonly FillInTemplate[] = [
   { id: 'a-a-8', sentence: 'Florian ___ reçu un nouveau jeu.', correctAnswer: 'a', options: ['a', 'à'] },
   { id: 'a-a-9', sentence: 'Il pense souvent ___ ses cousins.', correctAnswer: 'à', options: ['a', 'à'] },
   { id: 'a-a-10', sentence: 'La maîtresse ___ félicité toute la classe.', correctAnswer: 'a', options: ['a', 'à'] },
+  { id: 'a-a-11', sentence: 'Le pirate ___ caché son trésor sur l’île.', correctAnswer: 'a', options: ['a', 'à'] },
+  { id: 'a-a-12', sentence: 'Nous irons ___ la montagne cet hiver.', correctAnswer: 'à', options: ['a', 'à'] },
+  { id: 'a-a-13', sentence: 'Florian ___ invité ses amis pour jouer.', correctAnswer: 'a', options: ['a', 'à'] },
+  { id: 'a-a-14', sentence: 'Il aime offrir des dessins ___ ses parents.', correctAnswer: 'à', options: ['a', 'à'] },
+  { id: 'a-a-15', sentence: 'La fusée ___ décollé à midi.', correctAnswer: 'a', options: ['a', 'à'] },
+  { id: 'a-a-16', sentence: 'Les enfants vont ___ la bibliothèque après l’école.', correctAnswer: 'à', options: ['a', 'à'] },
+  { id: 'a-a-17', sentence: 'Florian ___ mangé toute sa soupe.', correctAnswer: 'a', options: ['a', 'à'] },
+  { id: 'a-a-18', sentence: 'On se retrouve ___ la sortie de l’école.', correctAnswer: 'à', options: ['a', 'à'] },
+  { id: 'a-a-19', sentence: 'La maîtresse ___ expliqué la consigne.', correctAnswer: 'a', options: ['a', 'à'] },
+  { id: 'a-a-20', sentence: 'Ils partent ___ la mer demain matin.', correctAnswer: 'à', options: ['a', 'à'] },
 ];
 
 const EAU_VARIANTS_TEMPLATES: readonly FillInTemplate[] = [
@@ -223,6 +243,66 @@ const EAU_VARIANTS_TEMPLATES: readonly FillInTemplate[] = [
     id: 'eau-variants-10',
     sentence: 'Cette jeune maman pousse un land___.',
     correctAnswer: 'au',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-11',
+    sentence: 'Le chape___ rouge est posé sur la chaise.',
+    correctAnswer: 'au',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-12',
+    sentence: 'Les bate___ voguent sur la mer.',
+    correctAnswer: 'aux',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-13',
+    sentence: 'Il boit un grand verre d___ bien frais.',
+    correctAnswer: 'eau',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-14',
+    sentence: 'Ces cad___ sont emballés avec soin.',
+    correctAnswer: 'eaux',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-15',
+    sentence: 'Le pian___ joue une mélodie douce.',
+    correctAnswer: 'o',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-16',
+    sentence: 'Le cachal___ plonge dans l\'océan.',
+    correctAnswer: 'ot',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-17',
+    sentence: 'Il protège son d___ avec une écharpe.',
+    correctAnswer: 'os',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-18',
+    sentence: '___ capitaine ! Le navire est en vue.',
+    correctAnswer: 'ô',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-19',
+    sentence: 'Le chât___ du roi est immense.',
+    correctAnswer: 'eau',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-20',
+    sentence: 'Les chame___ avancent doucement dans le désert.',
+    correctAnswer: 'aux',
     options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
   },
 ];

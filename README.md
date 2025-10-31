@@ -9,6 +9,7 @@ résultats.
 - Interface colorée pensée pour les enfants avec une mascotte motivante.
 - Deux matières disponibles : **Maths** (tables de multiplication aléatoires) et **Français** (phrases à compléter).
 - 3 propositions de réponse par question en maths et boutons de réponses adaptés pour les phrases à trous en français.
+- Grands répertoires de phrases françaises (20 par mission) pour varier les questions à chaque partie.
 - Suivi du score, de la progression et des séries de bonnes réponses.
 - Journal des dernières missions avec date, note et matière révisée.
 - Écran de résultats avec badge de réussite et récapitulatif détaillé.
