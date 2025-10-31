@@ -414,7 +414,7 @@ const buildMultiplicationQuestion = (
 
   const wrongAnswers = new Set<number>();
   while (wrongAnswers.size < 2) {
-    const candidate = randomInt(2, 10) * randomInt(2, 10);
+    const candidate = randomInt(2, 12) * randomInt(2, 12);
     if (candidate !== correctAnswer) {
       wrongAnswers.add(candidate);
     }
@@ -450,8 +450,8 @@ const createMultiplicationQuestionSet = (
 
   while (questions.length < TOTAL_QUESTIONS && attempts < 10_000) {
     attempts += 1;
-    const factorA = randomInt(2, 10);
-    const factorB = randomInt(2, 10);
+    const factorA = randomInt(2, 12);
+    const factorB = randomInt(2, 12);
     const key = normaliseKey(factorA, factorB);
 
     if (usedKeys.has(key)) {
@@ -473,8 +473,8 @@ const createMultiplicationQuestionSet = (
   }
 
   while (questions.length < TOTAL_QUESTIONS) {
-    const factorA = randomInt(2, 10);
-    const factorB = randomInt(2, 10);
+    const factorA = randomInt(2, 12);
+    const factorB = randomInt(2, 12);
     const key = normaliseKey(factorA, factorB);
 
     if (usedKeys.has(key)) {
@@ -781,9 +781,9 @@ type QuestionMemory = Partial<Record<CategoryId, string[]>>;
 const CATEGORY_CONFIGS = {
   'maths-multiplications': {
     subject: 'maths',
-    label: 'Maths · Tables de multiplication',
-    shortLabel: 'Maths · Multiplications',
-    heroBadge: 'Mission Multiplications',
+    label: 'Maths · Multiplication',
+    shortLabel: 'Maths · Multiplication',
+    heroBadge: 'Mission Multiplication',
     heroTitle: 'Capitaine Calcul',
     heroSubtitle: `Florian, relève les ${TOTAL_QUESTIONS} défis et décroche toutes les étoiles !`,
     questionLabel: 'Défi',
