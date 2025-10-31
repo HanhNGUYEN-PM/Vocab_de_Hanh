@@ -1,14 +1,16 @@
 # Capitaine Calcul
 
-Une application web ludique pour aider un enfant de 9 ans à mémoriser ses tables de multiplication. Les parties se jouent sous
-forme de quiz de 10 questions à choix multiple avec un score final et un historique des réponses.
+Une application web ludique pour aider Florian (9 ans) à réviser plusieurs missions scolaires. Chaque partie propose 10
+questions : tables de multiplication ou exercices de français (et/est, a/à, ou/au/aux) avec un suivi de score et un journal des
+résultats.
 
 ## ✨ Fonctionnalités principales
 
 - Interface colorée pensée pour les enfants avec une mascotte motivante.
-- Quiz de 10 questions générées aléatoirement (facteurs de 2 à 10).
-- 3 propositions de réponse par question, passage automatique à la question suivante après un clic.
+- Deux matières disponibles : **Maths** (tables de multiplication aléatoires) et **Français** (phrases à compléter).
+- 3 propositions de réponse par question en maths, choix via menu déroulant pour les phrases à trous en français.
 - Suivi du score, de la progression et des séries de bonnes réponses.
+- Journal des dernières missions avec date, note et matière révisée.
 - Écran de résultats avec badge de réussite et récapitulatif détaillé.
 - Bouton « Rejouer la mission » pour lancer un nouveau test instantanément.
 
@@ -91,8 +93,9 @@ Tout le monde peut accéder à la mission via un simple lien, sans se connecter 
 
 ## 🔧 Personnalisation rapide
 
-- Pour modifier le nombre de questions ou la plage des tables, ajustez les constantes situées en haut de `src/App.tsx`.
-- Les messages de motivation et les badges de fin de partie se trouvent également dans `src/App.tsx`.
+- Pour modifier le nombre de questions, la plage des tables ou les listes de phrases françaises, ajustez les constantes situées en haut de `src/App.tsx`.
+- Les messages de motivation par matière et les badges de fin de partie se trouvent également dans `src/App.tsx`.
+- Vous pouvez ajouter de nouvelles catégories (maths ou français) en dupliquant les modèles existants dans `src/App.tsx` et en fournissant vos propres textes.
 - Le style visuel (couleurs, animations, mise en page) est défini dans `src/index.css`.
 
 ## 📄 Licence
