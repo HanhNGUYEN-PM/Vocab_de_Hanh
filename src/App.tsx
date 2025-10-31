@@ -409,6 +409,7 @@ const App = () => {
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const [streak, setStreak] = useState(0);
   const [scoreLog, setScoreLog] = useState<ScoreLogEntry[]>(() => readStoredScoreLog());
+  const [currentFillSelection, setCurrentFillSelection] = useState('');
 
   const currentCategory = CATEGORY_CONFIGS[selectedCategoryId];
   const subjectMessages = SUBJECT_MESSAGES[currentCategory.subject];
@@ -425,6 +426,7 @@ const App = () => {
     setQuizFinished(false);
     setLastResult(null);
     setStreak(0);
+    setCurrentFillSelection('');
   };
 
   const handleAnswer = (choice: string) => {
@@ -571,6 +573,12 @@ const App = () => {
 
   const resolvedCurrentQuestion = quizFinished ? null : currentQuestion;
 
+  useEffect(() => {
+    if (resolvedCurrentQuestion?.kind === 'fill-in') {
+      setCurrentFillSelection('');
+    }
+  }, [resolvedCurrentQuestion?.id]);
+
   return (
     <div className="app">
       <main className="game-card">
@@ -687,7 +695,36 @@ const App = () => {
                         <span key={`part-${partIndex}`}>
                           {part}
                           {partIndex < parts.length - 1 && (
-                            <span className="sentence-blank">_____</span>
+                            <span className="sentence-blank">
+                              <label
+                                className="visually-hidden"
+                                htmlFor={`fill-select-${resolvedCurrentQuestion.id}`}
+                              >
+                                {currentCategory.questionInstruction}
+                              </label>
+                              <select
+                                key={resolvedCurrentQuestion.id}
+                                id={`fill-select-${resolvedCurrentQuestion.id}`}
+                                className="fill-select"
+                                value={currentFillSelection}
+                                onChange={event => {
+                                  const value = event.target.value;
+                                  setCurrentFillSelection(value);
+                                  if (value) {
+                                    handleAnswer(value);
+                                  }
+                                }}
+                              >
+                                <option value="" disabled>
+                                  Choisis la bonne réponse
+                                </option>
+                                {resolvedCurrentQuestion.options.map(option => (
+                                  <option key={option} value={option}>
+                                    {option}
+                                  </option>
+                                ))}
+                              </select>
+                            </span>
                           )}
                         </span>
                       ))}
@@ -710,34 +747,7 @@ const App = () => {
                       </button>
                     ))}
                   </div>
-                ) : (
-                  <div className="select-wrapper">
-                    <label className="visually-hidden" htmlFor={`fill-select-${resolvedCurrentQuestion.id}`}>
-                      {currentCategory.questionInstruction}
-                    </label>
-                    <select
-                      id={`fill-select-${resolvedCurrentQuestion.id}`}
-                      className="fill-select"
-                      defaultValue=""
-                      onChange={event => {
-                        const value = event.target.value;
-                        if (!value) {
-                          return;
-                        }
-                        handleAnswer(value);
-                      }}
-                    >
-                      <option value="" disabled>
-                        Choisis la bonne réponse
-                      </option>
-                      {resolvedCurrentQuestion.options.map(option => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                ) : null}
               </div>
             ) : null}
           </section>
