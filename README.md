@@ -1,7 +1,7 @@
 # Capitaine Calcul
 
 Une application web ludique pour aider Florian (9 ans) à réviser plusieurs missions scolaires. Chaque partie propose 10
-questions : tables de multiplication ou exercices de français (et/est, a/à, eau/eaux/au/aux/o/ô/os/ot) avec un suivi de score et un journal des
+questions : tables de multiplication ou exercices de français (et/est, a/à, on/ont, son/sont, ces/ses/c'est/s'est, eau/eaux/au/aux/o/ô/os/ot) avec un suivi de score et un journal des
 résultats.
 
 ## ✨ Fonctionnalités principales
@@ -9,6 +9,7 @@ résultats.
 - Interface colorée pensée pour les enfants avec une mascotte motivante.
 - Deux matières disponibles : **Maths** (tables de multiplication aléatoires) et **Français** (phrases à compléter).
 - 3 propositions de réponse par question en maths et boutons de réponses adaptés pour les phrases à trous en français.
+- Six missions d'orthographe française : et/est, a/à, on/ont, son/sont, ces/ses/c'est/s'est et terminaisons eau/eaux/au/aux/o/ô/os/ot.
 - Grands répertoires de phrases françaises (20 par mission) pour varier les questions à chaque partie.
 - Suivi du score, de la progression et des séries de bonnes réponses.
 - Journal des dernières missions avec date, note et matière révisée.
@@ -94,7 +95,7 @@ Tout le monde peut accéder à la mission via un simple lien, sans se connecter 
 
 ## 🔧 Personnalisation rapide
 
-- Pour modifier le nombre de questions, la plage des tables ou les listes de phrases françaises, ajustez les constantes situées en haut de `src/App.tsx`.
+- Pour modifier le nombre de questions, la plage des tables ou les listes de phrases françaises, ajustez les constantes situées en haut de `src/App.tsx` (chaque mission possède son propre tableau de phrases).
 - Les messages de motivation par matière et les badges de fin de partie se trouvent également dans `src/App.tsx`.
 - Vous pouvez ajouter de nouvelles catégories (maths ou français) en dupliquant les modèles existants dans `src/App.tsx` et en fournissant vos propres textes.
 - Le style visuel (couleurs, animations, mise en page) est défini dans `src/index.css`.

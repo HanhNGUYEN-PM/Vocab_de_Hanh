@@ -1,5 +1,5 @@
 {
   "name": "Capitaine Calcul",
-  "description": "Application ludique pour entraîner les enfants de 9 ans aux tables de multiplication avec des quiz de 10 questions, des scores et des encouragements.",
+  "description": "Application ludique pour entraîner les enfants de 9 ans aux tables de multiplication et à l'orthographe (et/est, a/à, on/ont, son/sont, ces/ses/c'est/s'est, eau/eaux/au/aux/o/ô/os/ot) avec des quiz de 10 questions, des scores et des encouragements.",
   "requestFramePermissions": []
 }
