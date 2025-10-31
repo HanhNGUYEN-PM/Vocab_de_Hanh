@@ -13,10 +13,13 @@ const MAX_SCORE_LOG_ENTRIES = 6;
 
 type SubjectKey = 'maths' | 'francais';
 
-type MultiplicationQuestion = {
+type MathOperator = '×' | '+' | '−' | '÷';
+
+type MathQuestion = {
   id: string;
-  kind: 'multiplication';
-  factors: [number, number];
+  kind: 'math';
+  operands: [number, number];
+  operator: MathOperator;
   options: number[];
   correctAnswer: number;
 };
@@ -29,7 +32,7 @@ type FillInQuestion = {
   correctAnswer: string;
 };
 
-type Question = MultiplicationQuestion | FillInQuestion;
+type Question = MathQuestion | FillInQuestion;
 
 type HistoryEntry = {
   id: string;
@@ -84,30 +87,30 @@ const pick = <T,>(list: readonly T[]): T => list[randomInt(0, list.length - 1)];
 const SUBJECT_MESSAGES: Record<SubjectKey, SubjectMessages> = {
   maths: {
     positives: [
-      'Bravo Florian, super héros des chiffres !',
+      'Bravo Florian, super héros des calculs !',
       'Yes Florian ! Tu as dégainé la bonne réponse !',
       'Génial Florian, tu vises juste !',
       'Tu progresses à la vitesse de la lumière, Florian !',
-      'Fantastique Florian, tu domptes les multiplications !',
+      'Fantastique Florian, tu domptes les opérations !',
     ],
     encouragements: [
       'Pas grave Florian, on retente au prochain coup !',
       'Respire un grand coup Florian, tu vas y arriver !',
       'Chaque erreur est un tremplin pour réussir, capitaine Florian !',
-      'Courage Florian, tu deviens un pro des tables !',
+      'Courage Florian, tu deviens un pro des calculs !',
       'On continue Florian, la victoire est proche !',
     ],
     motivations: [
-      '✨ Florian, mission : devenir champion des multiplications !',
+      '✨ Florian, mission : devenir champion des opérations !',
       '🚀 Plus tu joues, plus ton cerveau muscle ses super-pouvoirs Florian !',
-      '🎯 Florian, un pas à la fois et tu connaîtras toutes les tables !',
+      '🎯 Florian, un pas à la fois et tu maîtrises toutes les opérations !',
       '🧠 Ton cerveau brille, continue comme ça Florian !',
     ],
-    start: '🚀 Prêt pour ta mission spéciale multiplications, Florian ?',
+    start: '🚀 Prêt pour ta mission spéciale calculs, Florian ?',
     afterOne: '🎉 Une de faite, Florian ! Continue comme ça !',
     mid: '🧠 Tu es déjà à mi-parcours Florian, ne lâche rien !',
     streak: count => `🔥 ${count} réponses justes d'affilée, Florian, quelle fusée !`,
-    finishPerfect: '🌟 Score parfait Florian ! Tu es le maître des multiplications !',
+    finishPerfect: '🌟 Score parfait Florian ! Tu es le maître des calculs !',
     finishGreat: '🏅 Impressionnant Florian ! Encore une mission pour devenir imbattable ?',
     finishGood: '💪 Beau travail Florian ! Un petit entraînement de plus et tu seras au top.',
     finishTryAgain: '🔁 Chaque partie te rapproche du super-héros des maths, Florian !',
@@ -406,7 +409,7 @@ const buildMultiplicationQuestion = (
   index: number,
   factorA: number,
   factorB: number,
-): MultiplicationQuestion => {
+): MathQuestion => {
   const correctAnswer = factorA * factorB;
 
   const wrongAnswers = new Set<number>();
@@ -421,8 +424,9 @@ const buildMultiplicationQuestion = (
 
   return {
     id: `multi-${index}-${factorA}-${factorB}-${Math.random().toString(36).slice(2, 8)}`,
-    kind: 'multiplication',
-    factors: [factorA, factorB],
+    kind: 'math',
+    operands: [factorA, factorB],
+    operator: '×',
     options,
     correctAnswer,
   };
@@ -432,7 +436,7 @@ const createMultiplicationQuestionSet = (
   previousKeys: readonly string[],
 ): GeneratedQuestionSet => {
   const previousKeySet = new Set(previousKeys);
-  const questions: MultiplicationQuestion[] = [];
+  const questions: MathQuestion[] = [];
   const keys: string[] = [];
   const usedKeys = new Set<string>();
   const maxRepeats = Math.min(2, previousKeys.length);
@@ -480,6 +484,213 @@ const createMultiplicationQuestionSet = (
     questions.push(buildMultiplicationQuestion(questions.length, factorA, factorB));
     keys.push(key);
     usedKeys.add(key);
+  }
+
+  return { questions, keys };
+};
+
+const buildMathQuestion = (
+  index: number,
+  operandA: number,
+  operandB: number,
+  operator: MathOperator,
+  correctAnswer: number,
+  wrongAnswerGenerator: (correct: number, operands: [number, number]) => number,
+  candidateRange: { min: number; max: number },
+): MathQuestion | null => {
+  const wrongAnswers = new Set<number>();
+  let guard = 0;
+
+  while (wrongAnswers.size < 2 && guard < 200) {
+    guard += 1;
+    const candidate = wrongAnswerGenerator(correctAnswer, [operandA, operandB]);
+    if (candidate === correctAnswer || candidate < candidateRange.min || candidate > candidateRange.max) {
+      continue;
+    }
+    wrongAnswers.add(candidate);
+  }
+
+  while (wrongAnswers.size < 2 && guard < 400) {
+    guard += 1;
+    const candidate = randomInt(candidateRange.min, candidateRange.max);
+    if (candidate !== correctAnswer) {
+      wrongAnswers.add(candidate);
+    }
+  }
+
+  if (wrongAnswers.size < 2) {
+    return null;
+  }
+
+  const options = shuffle([correctAnswer, ...wrongAnswers]);
+
+  return {
+    id: `math-${operator}-${index}-${operandA}-${operandB}-${Math.random().toString(36).slice(2, 8)}`,
+    kind: 'math',
+    operands: [operandA, operandB],
+    operator,
+    options,
+    correctAnswer,
+  };
+};
+
+const createAdditionQuestionSet = (previousKeys: readonly string[]): GeneratedQuestionSet => {
+  const previousKeySet = new Set(previousKeys);
+  const questions: MathQuestion[] = [];
+  const keys: string[] = [];
+  const usedKeys = new Set<string>();
+  const maxRepeats = Math.min(2, previousKeys.length);
+  let repeatsUsed = 0;
+  let attempts = 0;
+
+  const normaliseKey = (a: number, b: number) => {
+    const [min, max] = a < b ? [a, b] : [b, a];
+    return `${min}+${max}`;
+  };
+
+  while (questions.length < TOTAL_QUESTIONS && attempts < 10_000) {
+    attempts += 1;
+    const addendA = randomInt(2, 40);
+    const addendB = randomInt(2, 40);
+    const key = normaliseKey(addendA, addendB);
+
+    if (usedKeys.has(key)) {
+      continue;
+    }
+
+    const isRepeat = previousKeySet.has(key);
+    if (isRepeat && repeatsUsed >= maxRepeats) {
+      continue;
+    }
+
+    const correctAnswer = addendA + addendB;
+    const question = buildMathQuestion(
+      questions.length,
+      addendA,
+      addendB,
+      '+',
+      correctAnswer,
+      (answer, _operands) => answer + randomInt(-10, 10),
+      { min: 2, max: 80 },
+    );
+
+    if (!question) {
+      continue;
+    }
+
+    questions.push(question);
+    keys.push(key);
+    usedKeys.add(key);
+
+    if (isRepeat) {
+      repeatsUsed += 1;
+    }
+  }
+
+  return { questions, keys };
+};
+
+const createSubtractionQuestionSet = (previousKeys: readonly string[]): GeneratedQuestionSet => {
+  const previousKeySet = new Set(previousKeys);
+  const questions: MathQuestion[] = [];
+  const keys: string[] = [];
+  const usedKeys = new Set<string>();
+  const maxRepeats = Math.min(2, previousKeys.length);
+  let repeatsUsed = 0;
+  let attempts = 0;
+
+  const normaliseKey = (a: number, b: number) => `${a}-${b}`;
+
+  while (questions.length < TOTAL_QUESTIONS && attempts < 10_000) {
+    attempts += 1;
+    const minuend = randomInt(10, 80);
+    const subtrahend = randomInt(0, Math.min(minuend, 60));
+    const key = normaliseKey(minuend, subtrahend);
+
+    if (usedKeys.has(key)) {
+      continue;
+    }
+
+    const isRepeat = previousKeySet.has(key);
+    if (isRepeat && repeatsUsed >= maxRepeats) {
+      continue;
+    }
+
+    const correctAnswer = minuend - subtrahend;
+    const question = buildMathQuestion(
+      questions.length,
+      minuend,
+      subtrahend,
+      '−',
+      correctAnswer,
+      (answer, _operands) => answer + randomInt(-10, 10),
+      { min: 0, max: 80 },
+    );
+
+    if (!question) {
+      continue;
+    }
+
+    questions.push(question);
+    keys.push(key);
+    usedKeys.add(key);
+
+    if (isRepeat) {
+      repeatsUsed += 1;
+    }
+  }
+
+  return { questions, keys };
+};
+
+const createDivisionQuestionSet = (previousKeys: readonly string[]): GeneratedQuestionSet => {
+  const previousKeySet = new Set(previousKeys);
+  const questions: MathQuestion[] = [];
+  const keys: string[] = [];
+  const usedKeys = new Set<string>();
+  const maxRepeats = Math.min(2, previousKeys.length);
+  let repeatsUsed = 0;
+  let attempts = 0;
+
+  const normaliseKey = (dividend: number, divisor: number) => `${dividend}÷${divisor}`;
+
+  while (questions.length < TOTAL_QUESTIONS && attempts < 10_000) {
+    attempts += 1;
+    const divisor = randomInt(2, 10);
+    const quotient = randomInt(2, 12);
+    const dividend = divisor * quotient;
+    const key = normaliseKey(dividend, divisor);
+
+    if (usedKeys.has(key)) {
+      continue;
+    }
+
+    const isRepeat = previousKeySet.has(key);
+    if (isRepeat && repeatsUsed >= maxRepeats) {
+      continue;
+    }
+
+    const question = buildMathQuestion(
+      questions.length,
+      dividend,
+      divisor,
+      '÷',
+      quotient,
+      () => randomInt(1, 12),
+      { min: 1, max: 20 },
+    );
+
+    if (!question) {
+      continue;
+    }
+
+    questions.push(question);
+    keys.push(key);
+    usedKeys.add(key);
+
+    if (isRepeat) {
+      repeatsUsed += 1;
+    }
   }
 
   return { questions, keys };
@@ -580,6 +791,45 @@ const CATEGORY_CONFIGS = {
     summaryTitle: 'Mission accomplie Florian !',
     restartLabel: 'Rejouer la mission',
     createQuestionSet: previousKeys => createMultiplicationQuestionSet(previousKeys),
+  },
+  'maths-additions': {
+    subject: 'maths',
+    label: 'Maths · Additions',
+    shortLabel: 'Maths · Additions',
+    heroBadge: 'Mission Additions',
+    heroTitle: 'Capitaine Calcul',
+    heroSubtitle: 'Florian, assemble les nombres pour trouver le bon total !',
+    questionLabel: 'Défi',
+    questionInstruction: 'Choisis la bonne réponse :',
+    summaryTitle: 'Mission accomplie Florian !',
+    restartLabel: 'Rejouer la mission',
+    createQuestionSet: previousKeys => createAdditionQuestionSet(previousKeys),
+  },
+  'maths-soustractions': {
+    subject: 'maths',
+    label: 'Maths · Soustractions',
+    shortLabel: 'Maths · Soustractions',
+    heroBadge: 'Mission Soustractions',
+    heroTitle: 'Capitaine Calcul',
+    heroSubtitle: 'Florian, calcule les différences avec précision !',
+    questionLabel: 'Défi',
+    questionInstruction: 'Choisis la bonne réponse :',
+    summaryTitle: 'Mission accomplie Florian !',
+    restartLabel: 'Rejouer la mission',
+    createQuestionSet: previousKeys => createSubtractionQuestionSet(previousKeys),
+  },
+  'maths-divisions': {
+    subject: 'maths',
+    label: 'Maths · Divisions',
+    shortLabel: 'Maths · Divisions',
+    heroBadge: 'Mission Divisions',
+    heroTitle: 'Capitaine Calcul',
+    heroSubtitle: 'Florian, partage les trésors équitablement !',
+    questionLabel: 'Défi',
+    questionInstruction: 'Choisis la bonne réponse :',
+    summaryTitle: 'Mission accomplie Florian !',
+    restartLabel: 'Rejouer la mission',
+    createQuestionSet: previousKeys => createDivisionQuestionSet(previousKeys),
   },
   'francais-et-est': {
     subject: 'francais',
@@ -803,7 +1053,7 @@ const App = () => {
       return;
     }
 
-    const expectedAnswer = currentQuestion.kind === 'multiplication'
+    const expectedAnswer = currentQuestion.kind === 'math'
       ? String(currentQuestion.correctAnswer)
       : currentQuestion.correctAnswer;
 
@@ -811,8 +1061,8 @@ const App = () => {
     const newTotalAnswered = questionsAnswered + 1;
     const newScore = isCorrect ? score + 1 : score;
 
-    const prompt = currentQuestion.kind === 'multiplication'
-      ? `${currentQuestion.factors[0]} × ${currentQuestion.factors[1]}`
+    const prompt = currentQuestion.kind === 'math'
+      ? `${currentQuestion.operands[0]} ${currentQuestion.operator} ${currentQuestion.operands[1]}`
       : currentQuestion.sentence;
 
     const completedSentence = currentQuestion.kind === 'fill-in'
@@ -834,8 +1084,8 @@ const App = () => {
     setScore(newScore);
     setStreak(prev => (isCorrect ? prev + 1 : 0));
 
-    const detail = currentQuestion.kind === 'multiplication'
-      ? `${currentQuestion.factors[0]} × ${currentQuestion.factors[1]} = ${currentQuestion.correctAnswer}`
+    const detail = currentQuestion.kind === 'math'
+      ? `${currentQuestion.operands[0]} ${currentQuestion.operator} ${currentQuestion.operands[1]} = ${currentQuestion.correctAnswer}`
       : isCorrect
         ? completedSentence ?? ''
         : `La bonne réponse était « ${expectedAnswer} » : ${completedSentence ?? ''}`;
@@ -1038,7 +1288,7 @@ const App = () => {
               <div className="question-area">
                 <div
                   className={`question-card ${
-                    resolvedCurrentQuestion.kind === 'multiplication'
+                    resolvedCurrentQuestion.kind === 'math'
                       ? 'question-card-maths'
                       : 'question-card-words'
                   }`}
@@ -1046,11 +1296,11 @@ const App = () => {
                   <p className="question-label">
                     {currentCategory.questionLabel} #{questionNumber}
                   </p>
-                  {resolvedCurrentQuestion.kind === 'multiplication' ? (
+                  {resolvedCurrentQuestion.kind === 'math' ? (
                     <p className="question-expression">
-                      <span>{resolvedCurrentQuestion.factors[0]}</span>
-                      <span className="question-symbol">×</span>
-                      <span>{resolvedCurrentQuestion.factors[1]}</span>
+                      <span>{resolvedCurrentQuestion.operands[0]}</span>
+                      <span className="question-symbol">{resolvedCurrentQuestion.operator}</span>
+                      <span>{resolvedCurrentQuestion.operands[1]}</span>
                     </p>
                   ) : (
                     <p className="sentence-with-blank">
@@ -1072,7 +1322,7 @@ const App = () => {
                 <p className="question-instruction">{currentCategory.questionInstruction}</p>
 
                 <div className="options-grid">
-                  {resolvedCurrentQuestion.kind === 'multiplication'
+                  {resolvedCurrentQuestion.kind === 'math'
                     ? resolvedCurrentQuestion.options.map(option => (
                         <button
                           type="button"
