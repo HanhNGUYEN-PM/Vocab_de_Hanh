@@ -1,14 +1,14 @@
 # Capitaine Calcul
 
 Une application web ludique pour aider Florian (9 ans) à réviser plusieurs missions scolaires. Chaque partie propose 10
-questions : tables de multiplication ou exercices de français (et/est, a/à, ou/au/aux) avec un suivi de score et un journal des
+questions : tables de multiplication ou exercices de français (et/est, a/à, eau/eaux/au/aux/o/ô/os/ot) avec un suivi de score et un journal des
 résultats.
 
 ## ✨ Fonctionnalités principales
 
 - Interface colorée pensée pour les enfants avec une mascotte motivante.
 - Deux matières disponibles : **Maths** (tables de multiplication aléatoires) et **Français** (phrases à compléter).
-- 3 propositions de réponse par question en maths, choix via menu déroulant pour les phrases à trous en français.
+- 3 propositions de réponse par question en maths et boutons de réponses adaptés pour les phrases à trous en français.
 - Suivi du score, de la progression et des séries de bonnes réponses.
 - Journal des dernières missions avec date, note et matière révisée.
 - Écran de résultats avec badge de réussite et récapitulatif détaillé.

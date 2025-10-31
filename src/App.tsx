@@ -164,17 +164,67 @@ const A_A_TEMPLATES: readonly FillInTemplate[] = [
   { id: 'a-a-10', sentence: 'La maîtresse ___ félicité toute la classe.', correctAnswer: 'a', options: ['a', 'à'] },
 ];
 
-const OU_AU_AUX_TEMPLATES: readonly FillInTemplate[] = [
-  { id: 'ou-au-aux-1', sentence: 'Florian va ___ parc avec son papa.', correctAnswer: 'au', options: ['ou', 'au', 'aux'] },
-  { id: 'ou-au-aux-2', sentence: "Tu veux du jus ___ de l'eau ?", correctAnswer: 'ou', options: ['ou', 'au', 'aux'] },
-  { id: 'ou-au-aux-3', sentence: 'Les élèves jouent ___ billes à la récré.', correctAnswer: 'aux', options: ['ou', 'au', 'aux'] },
-  { id: 'ou-au-aux-4', sentence: 'Nous partons ___ marché ce matin.', correctAnswer: 'au', options: ['ou', 'au', 'aux'] },
-  { id: 'ou-au-aux-5', sentence: 'Il hésite entre chocolat ___ vanille.', correctAnswer: 'ou', options: ['ou', 'au', 'aux'] },
-  { id: 'ou-au-aux-6', sentence: 'La maîtresse parle ___ parents de Florian.', correctAnswer: 'aux', options: ['ou', 'au', 'aux'] },
-  { id: 'ou-au-aux-7', sentence: 'La bibliothèque est ___ premier étage.', correctAnswer: 'au', options: ['ou', 'au', 'aux'] },
-  { id: 'ou-au-aux-8', sentence: 'Vous offrez des dessins ___ voisins.', correctAnswer: 'aux', options: ['ou', 'au', 'aux'] },
-  { id: 'ou-au-aux-9', sentence: 'Florian préfère lire ___ regarder la télé.', correctAnswer: 'ou', options: ['ou', 'au', 'aux'] },
-  { id: 'ou-au-aux-10', sentence: 'Ils répondent ___ questions du quiz.', correctAnswer: 'aux', options: ['ou', 'au', 'aux'] },
+const EAU_VARIANTS_TEMPLATES: readonly FillInTemplate[] = [
+  {
+    id: 'eau-variants-1',
+    sentence: 'Ces vitr___ sont de toute beauté.',
+    correctAnswer: 'aux',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-2',
+    sentence: "Je vais prendre le bat___ pour aller sur l'île voisine.",
+    correctAnswer: 'eau',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-3',
+    sentence: 'Mon amie part en vacances à La___ pendant une semaine.',
+    correctAnswer: 'os',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-4',
+    sentence: "___ ! mon Dieu ! Qu'as-tu fait ?",
+    correctAnswer: 'ô',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-5',
+    sentence: "J'ai planté des ros___ dans mon jardin.",
+    correctAnswer: 'eaux',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-6',
+    sentence: 'Je vais au jud___ trois fois par semaine.',
+    correctAnswer: 'o',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-7',
+    sentence: "L'eau du ch___ est utilisée en chimie.",
+    correctAnswer: 'aux',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-8',
+    sentence: "Ce tric___ a été offert à mon ami pour son anniversaire.",
+    correctAnswer: 'ot',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-9',
+    sentence: 'Ce cartable est trop lourd, vous allez avoir mal du d___.',
+    correctAnswer: 'os',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
+  {
+    id: 'eau-variants-10',
+    sentence: 'Cette jeune maman pousse un land___.',
+    correctAnswer: 'au',
+    options: ['eau', 'eaux', 'au', 'aux', 'o', 'ô', 'os', 'ot'],
+  },
 ];
 
 const createMultiplicationQuestion = (index: number): MultiplicationQuestion => {
@@ -285,16 +335,16 @@ const CATEGORY_CONFIGS = {
   },
   'francais-ou-au-aux': {
     subject: 'francais',
-    label: 'Français · ou / au / aux',
-    shortLabel: 'Français · ou / au / aux',
+    label: 'Français · eau / eaux / au / aux / o / ô / os / ot',
+    shortLabel: 'Français · eau & sons en o',
     heroBadge: 'Mission Orthographe',
     heroTitle: 'Capitaine des Mots',
-    heroSubtitle: 'Florian, complète les phrases en choisissant la bonne petite syllabe !',
+    heroSubtitle: 'Florian, trouve la terminaison en “o” qui fait sonner juste chaque phrase !',
     questionLabel: 'Phrase',
-    questionInstruction: 'Sélectionne la bonne orthographe :',
+    questionInstruction: 'Choisis la bonne terminaison :',
     summaryTitle: 'Mission mots réussie Florian !',
     restartLabel: 'Rejouer ce test',
-    createQuestionSet: () => createFillInQuestionSet(OU_AU_AUX_TEMPLATES),
+    createQuestionSet: () => createFillInQuestionSet(EAU_VARIANTS_TEMPLATES),
   },
 } as const satisfies Record<string, CategoryConfig>;
 
