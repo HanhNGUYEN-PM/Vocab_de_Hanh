@@ -1,7 +1,7 @@
 # Capitaine Calcul
 
 Une application web ludique pour aider Florian (9 ans) à réviser plusieurs missions scolaires. Chaque partie propose 10
-questions : défis de calcul mental (multiplication jusqu'aux tables de 12, additions, soustractions ou divisions) ou exercices de français (et/est, a/à, on/ont, son/sont, ces/ses/c'est/s'est, eau/eaux/au/aux/o/ô/os/ot) avec un suivi de score et un journal des
+questions : défis de calcul mental (multiplication jusqu'aux tables de 12, additions, soustractions ou divisions) ou exercices de français (et/est, a/à, on/ont, son/sont, ces/ses/c'est/s'est, eau/eaux/au/aux/o/ô/os/ot, ch/cch/k/c/ck/qu/q) avec un suivi de score et un journal des
 résultats.
 
 ## ✨ Fonctionnalités principales
@@ -10,7 +10,7 @@ résultats.
 - Deux matières disponibles : **Maths** (multiplication jusqu'aux tables de 12, additions, soustractions et divisions aléatoires) et **Français** (phrases à compléter).
 - 3 propositions de réponse par question en maths et boutons de réponses adaptés pour les phrases à trous en français.
 - Quatre missions de calcul mental pour varier les opérations et renforcer l'entraînement.
-- Six missions d'orthographe française : et/est, a/à, on/ont, son/sont, ces/ses/c'est/s'est et terminaisons eau/eaux/au/aux/o/ô/os/ot.
+- Sept missions d'orthographe française : et/est, a/à, on/ont, son/sont, ces/ses/c'est/s'est, terminaisons eau/eaux/au/aux/o/ô/os/ot et sons du [k] (ch/cch/k/c/ck/qu/q).
 - Grands répertoires de phrases françaises (20 par mission) pour varier les questions à chaque partie.
 - Algorithme anti-répétition : au maximum 2 questions sur 10 peuvent être reprises de la partie précédente, même en rejouant immédiatement.
 - Suivi du score, de la progression et des séries de bonnes réponses.

@@ -405,6 +405,29 @@ const CES_SES_CEST_SEST_TEMPLATES: readonly FillInTemplate[] = [
   { id: 'ces-ses-cest-sest-20', sentence: 'La fusée ___ posée sur la planète inconnue.', correctAnswer: "s'est", options: ['ces', 'ses', "c'est", "s'est"] },
 ];
 
+const CH_CCH_K_C_CK_QU_Q_TEMPLATES: readonly FillInTemplate[] = [
+  { id: 'ch-cch-k-c-ck-qu-q-1', sentence: 'Le ___at blanc saute sur le canapé.', correctAnswer: 'ch', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-2', sentence: 'La ma___ine de Florian construit des robots.', correctAnswer: 'ch', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-3', sentence: 'Il écoute une ___anson rigolote pendant le voyage.', correctAnswer: 'ch', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-4', sentence: 'Après sa chute, il a une e___ymose sur le genou.', correctAnswer: 'cch', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-5', sentence: 'Le scientifique parle du sa___arose contenu dans le sirop.', correctAnswer: 'cch', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-6', sentence: 'La prof de sciences mentionne la sa___arine très sucrée.', correctAnswer: 'cch', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-7', sentence: 'Il pratique le ___arate le mercredi soir.', correctAnswer: 'k', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-8', sentence: 'Son ___oala en peluche dort sur l’oreiller.', correctAnswer: 'k', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-9', sentence: 'Florian rêve de pagayer un ___ayak sur la rivière.', correctAnswer: 'k', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-10', sentence: 'Florian range ses cahiers dans son sa___.', correctAnswer: 'c', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-11', sentence: 'La ___abane de jardin abrite ses jouets.', correctAnswer: 'c', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-12', sentence: 'Il découpe un ___oeur en papier rouge.', correctAnswer: 'c', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-13', sentence: 'Il garde son ti___et de manège dans sa poche.', correctAnswer: 'ck', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-14', sentence: 'Au goûter, ils partagent un sna___ croustillant.', correctAnswer: 'ck', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-15', sentence: 'La guitare joue un ro___ endiablé.', correctAnswer: 'ck', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-16', sentence: 'Il pose une ___estion intéressante en classe.', correctAnswer: 'qu', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-17', sentence: 'Les pirates trouvent ___atre coffres remplis d’or.', correctAnswer: 'qu', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-18', sentence: 'Ils préparent un pi___e-nique sous le soleil.', correctAnswer: 'qu', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-19', sentence: 'Le co___ chante au lever du soleil.', correctAnswer: 'q', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+  { id: 'ch-cch-k-c-ck-qu-q-20', sentence: 'Il compte jusqu’à cin___ sans se tromper.', correctAnswer: 'q', options: ['ch', 'cch', 'k', 'c', 'ck', 'qu', 'q'] },
+];
+
 const buildMultiplicationQuestion = (
   index: number,
   factorA: number,
@@ -908,6 +931,19 @@ const CATEGORY_CONFIGS = {
     summaryTitle: 'Mission mots réussie Florian !',
     restartLabel: 'Rejouer ce test',
     createQuestionSet: previousKeys => createFillInQuestionSet(CES_SES_CEST_SEST_TEMPLATES, previousKeys),
+  },
+  'francais-ch-cch-k-c-ck-qu-q': {
+    subject: 'francais',
+    label: 'Français · ch / cch / k / c / ck / qu / q',
+    shortLabel: 'Français · sons du k',
+    heroBadge: 'Mission Orthographe',
+    heroTitle: 'Capitaine des Mots',
+    heroSubtitle: 'Florian, choisis la bonne lettre pour le son [k] dans chaque mot !',
+    questionLabel: 'Phrase',
+    questionInstruction: 'Sélectionne la bonne orthographe :',
+    summaryTitle: 'Mission mots réussie Florian !',
+    restartLabel: 'Rejouer ce test',
+    createQuestionSet: previousKeys => createFillInQuestionSet(CH_CCH_K_C_CK_QU_Q_TEMPLATES, previousKeys),
   },
 } as const satisfies Record<string, CategoryConfig>;
 
