@@ -1,5 +1,11 @@
 
-import { ChangeEvent, useEffect, useMemo, useState } from 'react';
+import {
+  ChangeEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 const TOTAL_QUESTIONS = 10;
 const SCORE_LOG_STORAGE_KEY = 'capitaine-calcul-score-log';
@@ -396,9 +402,11 @@ const CES_SES_CEST_SEST_TEMPLATES: readonly FillInTemplate[] = [
   { id: 'ces-ses-cest-sest-20', sentence: 'La fusée ___ posée sur la planète inconnue.', correctAnswer: "s'est", options: ['ces', 'ses', "c'est", "s'est"] },
 ];
 
-const createMultiplicationQuestion = (index: number): MultiplicationQuestion => {
-  const factorA = randomInt(2, 10);
-  const factorB = randomInt(2, 10);
+const buildMultiplicationQuestion = (
+  index: number,
+  factorA: number,
+  factorB: number,
+): MultiplicationQuestion => {
   const correctAnswer = factorA * factorB;
 
   const wrongAnswers = new Set<number>();
@@ -420,13 +428,111 @@ const createMultiplicationQuestion = (index: number): MultiplicationQuestion => 
   };
 };
 
-const createMultiplicationQuestionSet = (): MultiplicationQuestion[] =>
-  Array.from({ length: TOTAL_QUESTIONS }, (_, index) => createMultiplicationQuestion(index));
+const createMultiplicationQuestionSet = (
+  previousKeys: readonly string[],
+): GeneratedQuestionSet => {
+  const previousKeySet = new Set(previousKeys);
+  const questions: MultiplicationQuestion[] = [];
+  const keys: string[] = [];
+  const usedKeys = new Set<string>();
+  const maxRepeats = Math.min(2, previousKeys.length);
+  let repeatsUsed = 0;
+  let attempts = 0;
 
-const createFillInQuestionSet = (templates: readonly FillInTemplate[]): FillInQuestion[] => {
-  const pool = shuffle(templates);
-  const available = pool.length >= TOTAL_QUESTIONS ? pool.slice(0, TOTAL_QUESTIONS) : pool;
-  const result: FillInQuestion[] = available.map(template => ({
+  const normaliseKey = (a: number, b: number) => {
+    const [min, max] = a < b ? [a, b] : [b, a];
+    return `${min}x${max}`;
+  };
+
+  while (questions.length < TOTAL_QUESTIONS && attempts < 10_000) {
+    attempts += 1;
+    const factorA = randomInt(2, 10);
+    const factorB = randomInt(2, 10);
+    const key = normaliseKey(factorA, factorB);
+
+    if (usedKeys.has(key)) {
+      continue;
+    }
+
+    const isRepeat = previousKeySet.has(key);
+    if (isRepeat && repeatsUsed >= maxRepeats) {
+      continue;
+    }
+
+    questions.push(buildMultiplicationQuestion(questions.length, factorA, factorB));
+    keys.push(key);
+    usedKeys.add(key);
+
+    if (isRepeat) {
+      repeatsUsed += 1;
+    }
+  }
+
+  while (questions.length < TOTAL_QUESTIONS) {
+    const factorA = randomInt(2, 10);
+    const factorB = randomInt(2, 10);
+    const key = normaliseKey(factorA, factorB);
+
+    if (usedKeys.has(key)) {
+      continue;
+    }
+
+    questions.push(buildMultiplicationQuestion(questions.length, factorA, factorB));
+    keys.push(key);
+    usedKeys.add(key);
+  }
+
+  return { questions, keys };
+};
+
+const createFillInQuestionSet = (
+  templates: readonly FillInTemplate[],
+  previousKeys: readonly string[],
+): GeneratedQuestionSet => {
+  const previousKeySet = new Set(previousKeys);
+  const freshTemplates = shuffle(templates.filter(template => !previousKeySet.has(template.id)));
+  const repeatedTemplates = shuffle(templates.filter(template => previousKeySet.has(template.id)));
+  const selectedTemplates: FillInTemplate[] = [];
+
+  for (const template of freshTemplates) {
+    if (selectedTemplates.length >= TOTAL_QUESTIONS) {
+      break;
+    }
+    selectedTemplates.push(template);
+  }
+
+  let repeatBudget = Math.min(2, TOTAL_QUESTIONS - selectedTemplates.length);
+  for (const template of repeatedTemplates) {
+    if (selectedTemplates.length >= TOTAL_QUESTIONS || repeatBudget <= 0) {
+      break;
+    }
+    selectedTemplates.push(template);
+    repeatBudget -= 1;
+  }
+
+  if (selectedTemplates.length < TOTAL_QUESTIONS) {
+    const remainingPool = shuffle(
+      templates.filter(template => !selectedTemplates.some(selected => selected.id === template.id)),
+    );
+    for (const template of remainingPool) {
+      if (selectedTemplates.length >= TOTAL_QUESTIONS) {
+        break;
+      }
+      selectedTemplates.push(template);
+    }
+  }
+
+  if (selectedTemplates.length < TOTAL_QUESTIONS) {
+    const fallbackPool = shuffle(templates);
+    for (const template of fallbackPool) {
+      if (selectedTemplates.length >= TOTAL_QUESTIONS) {
+        break;
+      }
+      selectedTemplates.push(template);
+    }
+  }
+
+  const questions: FillInQuestion[] = selectedTemplates.slice(0, TOTAL_QUESTIONS).map(template => ({
     id: template.id,
     kind: 'fill-in',
     sentence: template.sentence,
@@ -434,18 +540,10 @@ const createFillInQuestionSet = (templates: readonly FillInTemplate[]): FillInQu
     correctAnswer: template.correctAnswer,
   }));
 
-  while (result.length < TOTAL_QUESTIONS && pool.length > 0) {
-    const template = pool[result.length % pool.length];
-    result.push({
-      id: `${template.id}-${result.length}`,
-      kind: 'fill-in',
-      sentence: template.sentence,
-      options: [...template.options],
-      correctAnswer: template.correctAnswer,
-    });
-  }
-
-  return result;
+  return {
+    questions,
+    keys: questions.map(question => question.id),
+  };
 };
 
 type CategoryConfig = {
@@ -459,8 +557,15 @@ type CategoryConfig = {
   questionInstruction: string;
   summaryTitle: string;
   restartLabel: string;
-  createQuestionSet: () => Question[];
+  createQuestionSet: (previousKeys: readonly string[]) => GeneratedQuestionSet;
 };
+
+type GeneratedQuestionSet = {
+  questions: Question[];
+  keys: string[];
+};
+
+type QuestionMemory = Partial<Record<CategoryId, string[]>>;
 
 const CATEGORY_CONFIGS = {
   'maths-multiplications': {
@@ -474,7 +579,7 @@ const CATEGORY_CONFIGS = {
     questionInstruction: 'Choisis la bonne réponse :',
     summaryTitle: 'Mission accomplie Florian !',
     restartLabel: 'Rejouer la mission',
-    createQuestionSet: () => createMultiplicationQuestionSet(),
+    createQuestionSet: previousKeys => createMultiplicationQuestionSet(previousKeys),
   },
   'francais-et-est': {
     subject: 'francais',
@@ -487,7 +592,7 @@ const CATEGORY_CONFIGS = {
     questionInstruction: 'Sélectionne la bonne orthographe :',
     summaryTitle: 'Mission mots réussie Florian !',
     restartLabel: 'Rejouer ce test',
-    createQuestionSet: () => createFillInQuestionSet(ET_EST_TEMPLATES),
+    createQuestionSet: previousKeys => createFillInQuestionSet(ET_EST_TEMPLATES, previousKeys),
   },
   'francais-a-a': {
     subject: 'francais',
@@ -500,7 +605,7 @@ const CATEGORY_CONFIGS = {
     questionInstruction: 'Choisis la bonne réponse :',
     summaryTitle: 'Mission mots réussie Florian !',
     restartLabel: 'Rejouer ce test',
-    createQuestionSet: () => createFillInQuestionSet(A_A_TEMPLATES),
+    createQuestionSet: previousKeys => createFillInQuestionSet(A_A_TEMPLATES, previousKeys),
   },
   'francais-ou-au-aux': {
     subject: 'francais',
@@ -513,7 +618,7 @@ const CATEGORY_CONFIGS = {
     questionInstruction: 'Choisis la bonne terminaison :',
     summaryTitle: 'Mission mots réussie Florian !',
     restartLabel: 'Rejouer ce test',
-    createQuestionSet: () => createFillInQuestionSet(EAU_VARIANTS_TEMPLATES),
+    createQuestionSet: previousKeys => createFillInQuestionSet(EAU_VARIANTS_TEMPLATES, previousKeys),
   },
   'francais-on-ont': {
     subject: 'francais',
@@ -526,7 +631,7 @@ const CATEGORY_CONFIGS = {
     questionInstruction: 'Sélectionne la bonne orthographe :',
     summaryTitle: 'Mission mots réussie Florian !',
     restartLabel: 'Rejouer ce test',
-    createQuestionSet: () => createFillInQuestionSet(ON_ONT_TEMPLATES),
+    createQuestionSet: previousKeys => createFillInQuestionSet(ON_ONT_TEMPLATES, previousKeys),
   },
   'francais-son-sont': {
     subject: 'francais',
@@ -539,7 +644,7 @@ const CATEGORY_CONFIGS = {
     questionInstruction: 'Sélectionne la bonne orthographe :',
     summaryTitle: 'Mission mots réussie Florian !',
     restartLabel: 'Rejouer ce test',
-    createQuestionSet: () => createFillInQuestionSet(SON_SONT_TEMPLATES),
+    createQuestionSet: previousKeys => createFillInQuestionSet(SON_SONT_TEMPLATES, previousKeys),
   },
   'francais-ces-ses-cest-sest': {
     subject: 'francais',
@@ -552,7 +657,7 @@ const CATEGORY_CONFIGS = {
     questionInstruction: 'Choisis la bonne expression :',
     summaryTitle: 'Mission mots réussie Florian !',
     restartLabel: 'Rejouer ce test',
-    createQuestionSet: () => createFillInQuestionSet(CES_SES_CEST_SEST_TEMPLATES),
+    createQuestionSet: previousKeys => createFillInQuestionSet(CES_SES_CEST_SEST_TEMPLATES, previousKeys),
   },
 } as const satisfies Record<string, CategoryConfig>;
 
@@ -655,9 +760,18 @@ const readStoredScoreLog = (): ScoreLogEntry[] => {
 };
 
 const App = () => {
+  const previousQuestionKeysRef = useRef<QuestionMemory>({});
+
+  const generateQuestionSetForCategory = (categoryId: CategoryId) => {
+    const previousKeys = previousQuestionKeysRef.current[categoryId] ?? [];
+    const { questions, keys } = CATEGORY_CONFIGS[categoryId].createQuestionSet(previousKeys);
+    previousQuestionKeysRef.current[categoryId] = keys;
+    return questions;
+  };
+
   const [selectedCategoryId, setSelectedCategoryId] = useState<CategoryId>(DEFAULT_CATEGORY_ID);
   const [questionSet, setQuestionSet] = useState<Question[]>(
-    () => CATEGORY_CONFIGS[DEFAULT_CATEGORY_ID].createQuestionSet(),
+    () => generateQuestionSetForCategory(DEFAULT_CATEGORY_ID),
   );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [questionsAnswered, setQuestionsAnswered] = useState(0);
@@ -673,9 +787,8 @@ const App = () => {
   const currentQuestion = questionSet[currentIndex];
 
   const resetQuizState = (categoryId: CategoryId) => {
-    const config = CATEGORY_CONFIGS[categoryId];
     setSelectedCategoryId(categoryId);
-    setQuestionSet(config.createQuestionSet());
+    setQuestionSet(generateQuestionSetForCategory(categoryId));
     setCurrentIndex(0);
     setQuestionsAnswered(0);
     setScore(0);

@@ -11,6 +11,7 @@ résultats.
 - 3 propositions de réponse par question en maths et boutons de réponses adaptés pour les phrases à trous en français.
 - Six missions d'orthographe française : et/est, a/à, on/ont, son/sont, ces/ses/c'est/s'est et terminaisons eau/eaux/au/aux/o/ô/os/ot.
 - Grands répertoires de phrases françaises (20 par mission) pour varier les questions à chaque partie.
+- Algorithme anti-répétition : au maximum 2 questions sur 10 peuvent être reprises de la partie précédente, même en rejouant immédiatement.
 - Suivi du score, de la progression et des séries de bonnes réponses.
 - Journal des dernières missions avec date, note et matière révisée.
 - Écran de résultats avec badge de réussite et récapitulatif détaillé.
