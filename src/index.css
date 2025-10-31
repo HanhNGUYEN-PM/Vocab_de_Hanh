@@ -33,6 +33,7 @@ body {
   padding: clamp(16px, 4vh, 32px);
   color: var(--color-text);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 #root {
@@ -227,6 +228,37 @@ h1 {
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
   gap: 24px;
   min-height: 0;
+}
+
+@media (max-width: 900px) {
+  body {
+    align-items: flex-start;
+  }
+
+  #root {
+    align-items: stretch;
+  }
+
+  .app {
+    width: 100%;
+  }
+
+  .game-card {
+    padding: clamp(20px, 4vw, 30px);
+    gap: 20px;
+  }
+
+  .game-header {
+    gap: 18px;
+  }
+
+  .hero {
+    max-width: none;
+  }
+
+  .header-controls {
+    width: 100%;
+  }
 }
 
 .primary-panel {
@@ -775,24 +807,52 @@ h1 {
   }
 
   .game-card {
-    padding: 24px 18px;
+    padding: 20px 16px;
+    border-radius: 20px;
+    min-height: auto;
+  }
+
+  .primary-panel {
+    padding: 18px 14px;
+    gap: 14px;
+  }
+
+  .question-area {
+    gap: 14px;
   }
 
   .game-header {
     flex-direction: column;
     align-items: stretch;
+    text-align: center;
+  }
+
+  .hero {
+    align-items: center;
+    text-align: center;
+  }
+
+  .badge {
+    align-self: center;
+  }
+
+  .subtitle {
+    font-size: 1rem;
   }
 
   .scoreboard {
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
   }
 
   .status-panel {
     flex-direction: column;
+    gap: 14px;
   }
 
   .status-card {
     flex: none;
+    padding: 14px 16px;
   }
 
   .history-grid {
@@ -805,8 +865,35 @@ h1 {
     grid-template-columns: 1fr;
   }
 
+  .primary-panel {
+    padding: 16px 12px;
+  }
+
+  .question-card {
+    padding: 18px 14px;
+  }
+
+  .question-expression {
+    font-size: clamp(2.4rem, 12vw, 3rem);
+  }
+
   .options-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .option-button {
+    font-size: 1.1rem;
+    padding: 12px 14px;
+  }
+
+  .sentence-with-blank {
+    font-size: 1.25rem;
+  }
+
+  .sentence-blank {
+    min-width: clamp(68px, 30vw, 120px);
+    margin: 0 4px;
   }
 
   .history-grid {
@@ -821,5 +908,46 @@ h1 {
   .mascot-avatar {
     width: 52px;
     height: 52px;
+  }
+
+  .status-card {
+    padding: 12px 14px;
+  }
+}
+
+@media (max-width: 400px) {
+  body {
+    padding: 16px 12px;
+  }
+
+  .game-card {
+    padding: 16px 12px;
+    gap: 16px;
+  }
+
+  .score-box {
+    padding: 12px 14px;
+  }
+
+  .score-value {
+    font-size: clamp(1.6rem, 10vw, 2rem);
+  }
+
+  .question-instruction {
+    font-size: 0.95rem;
+  }
+
+  .option-button {
+    font-size: 1rem;
+    padding: 12px;
+  }
+
+  .mascot-card {
+    gap: 10px;
+  }
+
+  .mascot-avatar {
+    width: 48px;
+    height: 48px;
   }
 }
