@@ -937,7 +937,7 @@
           const [shareStatus, setShareStatus] = useState(null);
           const [importStatus, setImportStatus] = useState(null);
           const [importError, setImportError] = useState(null);
-          const [isImportOpen, setIsImportOpen] = useState(false);
+          const [activeSyncTab, setActiveSyncTab] = useState('create');
           const [importInput, setImportInput] = useState('');
           const [lastShareCode, setLastShareCode] = useState(null);
           const [lastSharePayload, setLastSharePayload] = useState(null);
@@ -1031,7 +1031,9 @@
 
           useEffect(() => {
             if (isSyncCollapsed) {
-              setIsImportOpen(false);
+              setActiveSyncTab('create');
+              setIsManualImportMode(false);
+              setImportInput('');
             }
           }, [isSyncCollapsed]);
 
@@ -1129,6 +1131,7 @@
               setIsPackageVisible(false);
               setIsSyncCollapsed(false);
               setIsManualImportMode(false);
+              setActiveSyncTab('create');
 
               if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
                 await navigator.clipboard.writeText(hiddenShare);
@@ -1143,13 +1146,15 @@
             }
           };
 
-          const toggleImportSection = () => {
+          const handleSelectSyncTab = (tab) => {
+            setActiveSyncTab(tab);
             setIsSyncCollapsed(false);
-            setIsImportOpen((prev) => !prev);
-            setImportInput('');
-            setImportError(null);
-            setImportStatus(null);
-            setIsManualImportMode(false);
+            if (tab === 'import') {
+              setImportInput('');
+              setImportError(null);
+              setImportStatus(null);
+              setIsManualImportMode(false);
+            }
           };
 
           const handleCopySyncCode = async () => {
@@ -1225,7 +1230,6 @@
                 : 'All of the words from that sync code were already in your collection.',
             );
             setImportInput('');
-            setIsImportOpen(false);
             setIsManualImportMode(false);
           };
 
@@ -1411,18 +1415,28 @@
                         </button>
                       </div>
 
-                      <div className="flex flex-wrap gap-2">
+                      <div className="inline-flex rounded-md border border-indigo-200 bg-white/60 p-1">
                         <button
-                          onClick={handleCreateSyncCode}
-                          className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          type="button"
+                          onClick={() => handleSelectSyncTab('create')}
+                          className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                            activeSyncTab === 'create'
+                              ? 'bg-white text-indigo-700 shadow-sm'
+                              : 'text-indigo-600 hover:bg-indigo-100'
+                          }`}
                         >
-                          Create sync code
+                          Choisir votre code de synchronisation
                         </button>
                         <button
-                          onClick={toggleImportSection}
-                          className="px-4 py-2 bg-white text-indigo-700 font-semibold rounded-md shadow hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                          type="button"
+                          onClick={() => handleSelectSyncTab('import')}
+                          className={`px-3 py-2 text-sm font-semibold rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                            activeSyncTab === 'import'
+                              ? 'bg-white text-indigo-700 shadow-sm'
+                              : 'text-indigo-600 hover:bg-indigo-100'
+                          }`}
                         >
-                          {isImportOpen ? 'Close import' : 'Import sync code'}
+                          Saisir un code de synchronisation
                         </button>
                       </div>
 
@@ -1442,98 +1456,110 @@
 
                       {!isSyncCollapsed && (
                         <div className="space-y-4">
-                          <div className="space-y-2">
-                            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                              Choose your 6-digit sync code
-                            </label>
-                            <div className="flex flex-col sm:flex-row gap-2">
-                              <input
-                                value={customSyncCode}
-                                onChange={(event) => {
-                                  const digitsOnly = event.target.value.replace(/\D/g, '').slice(0, 6);
-                                  setCustomSyncCode(digitsOnly);
-                                  if (customCodeError) {
-                                    setCustomCodeError(null);
-                                  }
-                                }}
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                className="w-full sm:max-w-xs px-3 py-2 font-mono text-sm bg-white border border-indigo-200 rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                placeholder="For example: 246810"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setCustomSyncCode(generateNumericCode(6));
-                                  setCustomCodeError(null);
-                                }}
-                                className="px-3 py-2 bg-white text-indigo-700 text-sm font-semibold rounded-md border border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                              >
-                                Random code
-                              </button>
-                            </div>
-                            <p className="text-xs text-slate-500">
-                              Pick digits you can remember. When you copy the code, your vocabulary is hidden inside those six numbers.
-                            </p>
-                            {customCodeError && (
-                              <p className="text-xs text-red-600 font-medium">{customCodeError}</p>
-                            )}
-                          </div>
-
-                          {lastShareCode && lastSharePayload && (
-                            <div className="space-y-2">
-                              <div>
-                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
-                                  6-digit sync code
+                          {activeSyncTab === 'create' && (
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                                  Choisissez un code de 6 chiffres
                                 </label>
                                 <div className="flex flex-col sm:flex-row gap-2">
                                   <input
-                                    value={lastShareCode}
-                                    readOnly
-                                    className="w-full sm:max-w-xs px-3 py-2 font-mono text-sm bg-white border border-indigo-200 rounded-md text-slate-700"
+                                    value={customSyncCode}
+                                    onChange={(event) => {
+                                      const digitsOnly = event.target.value.replace(/\D/g, '').slice(0, 6);
+                                      setCustomSyncCode(digitsOnly);
+                                      if (customCodeError) {
+                                        setCustomCodeError(null);
+                                      }
+                                    }}
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    className="w-full sm:max-w-xs px-3 py-2 font-mono text-sm bg-white border border-indigo-200 rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    placeholder="Par exemple : 246810"
                                   />
                                   <button
                                     type="button"
-                                    onClick={handleCopySyncCode}
-                                    className="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    onClick={() => {
+                                      setCustomSyncCode(generateNumericCode(6));
+                                      setCustomCodeError(null);
+                                    }}
+                                    className="px-3 py-2 bg-white text-indigo-700 text-sm font-semibold rounded-md border border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                   >
-                                    Copy sync code
+                                    Code aléatoire
                                   </button>
                                 </div>
-                                <p className="text-xs text-slate-500 mt-2">
-                                  Use the copy button so the hidden data stays with your digits. Paste the code on your other device to restore your words.
+                                <p className="text-xs text-slate-500">
+                                  Choisissez des chiffres faciles à retenir. Lorsque vous copiez le code, votre vocabulaire est caché dans ces six chiffres.
                                 </p>
-                              </div>
-
-                              <div className="space-y-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setIsPackageVisible((prev) => !prev)}
-                                  className="px-3 py-2 bg-white text-indigo-700 text-xs font-semibold rounded-md border border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                >
-                                  {isPackageVisible ? 'Hide sync package text' : 'Show sync package text (manual backup)'}
-                                </button>
-                                {isPackageVisible && (
-                                  <div>
-                                    <textarea
-                                      value={formatSyncPackage(lastShareCode, lastSharePayload)}
-                                      readOnly
-                                      className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
-                                    />
-                                    <p className="text-xs text-slate-500 mt-2">
-                                      Copy and send this string only if pasting the digits does not work. The entire text must be pasted on the other device.
-                                    </p>
-                                  </div>
+                                {customCodeError && (
+                                  <p className="text-xs text-red-600 font-medium">{customCodeError}</p>
                                 )}
                               </div>
+
+                              <button
+                                type="button"
+                                onClick={handleCreateSyncCode}
+                                className="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                              >
+                                Copier ce code pour le partager
+                              </button>
+
+                              {lastShareCode && lastSharePayload && (
+                                <div className="space-y-2">
+                                  <div>
+                                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+                                      Code de synchronisation partagé
+                                    </label>
+                                    <div className="flex flex-col sm:flex-row gap-2">
+                                      <input
+                                        value={lastShareCode}
+                                        readOnly
+                                        className="w-full sm:max-w-xs px-3 py-2 font-mono text-sm bg-white border border-indigo-200 rounded-md text-slate-700"
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={handleCopySyncCode}
+                                        className="px-3 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                      >
+                                        Copier à nouveau
+                                      </button>
+                                    </div>
+                                    <p className="text-xs text-slate-500 mt-2">
+                                      Utilisez le bouton de copie pour conserver les données cachées avec vos chiffres. Collez le code sur l'autre appareil pour restaurer vos mots.
+                                    </p>
+                                  </div>
+
+                                  <div className="space-y-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setIsPackageVisible((prev) => !prev)}
+                                      className="px-3 py-2 bg-white text-indigo-700 text-xs font-semibold rounded-md border border-indigo-200 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    >
+                                      {isPackageVisible ? 'Masquer le texte de secours' : 'Afficher le texte de secours (package complet)'}
+                                    </button>
+                                    {isPackageVisible && (
+                                      <div>
+                                        <textarea
+                                          value={formatSyncPackage(lastShareCode, lastSharePayload)}
+                                          readOnly
+                                          className="w-full h-24 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md text-slate-700"
+                                        />
+                                        <p className="text-xs text-slate-500 mt-2">
+                                          Copiez et envoyez cette chaîne uniquement si le collage des six chiffres ne fonctionne pas. L'autre appareil doit recevoir tout le texte.
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           )}
 
-                          {isImportOpen && (
+                          {activeSyncTab === 'import' && (
                             <form onSubmit={handleImportSubmit} className="space-y-4">
                               <div className="space-y-2">
                                 <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                                  Enter your 6-digit sync code
+                                  Saisissez un code de 6 chiffres pour vous synchroniser
                                 </label>
                                 <input
                                   value={importInput}
@@ -1563,11 +1589,11 @@
                                   }}
                                   inputMode="numeric"
                                   pattern="[0-9]*"
-                                  placeholder="Paste or type your code (for example: 246810)"
+                                  placeholder="Collez ou saisissez votre code (exemple : 246810)"
                                   className="w-full px-3 py-2 font-mono text-sm bg-white border border-indigo-200 rounded-md text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                 />
                                 <p className="text-xs text-slate-500">
-                                  Paste the digits you copied. Copying keeps the hidden data intact, but typing the six numbers also works if the app delivering the code removed the hidden data.
+                                  Collez les chiffres copiés. La copie conserve les données cachées, mais vous pouvez aussi taper les six chiffres si l'application a retiré les caractères invisibles.
                                 </p>
                                 <button
                                   type="button"
@@ -1582,14 +1608,14 @@
                                   }}
                                   className="text-xs font-semibold text-indigo-700 hover:underline"
                                 >
-                                  {isManualImportMode ? 'Use the 6-digit code instead' : 'Trouble? Paste the full sync package'}
+                                  {isManualImportMode ? 'Utiliser uniquement les 6 chiffres' : "Besoin d'aide ? Collez le package complet"}
                                 </button>
                               </div>
 
                               {isManualImportMode && (
                                 <div className="space-y-2">
                                   <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                                    Paste the sync package text you copied
+                                    Collez le texte complet de synchronisation
                                   </label>
                                   <textarea
                                     value={importInput}
@@ -1602,11 +1628,11 @@
                                         setImportStatus(null);
                                       }
                                     }}
-                                    placeholder="Paste the sync package string (for example: 123456:eyJ2b2NhYiI6Wy4uLl0=)"
+                                    placeholder="Collez la chaîne complète (exemple : 123456:eyJ2b2NhYiI6Wy4uLl0=)"
                                     className="w-full h-32 p-3 font-mono text-xs bg-white border border-indigo-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                   />
                                   <p className="text-xs text-slate-500">
-                                    Use this fallback if a messaging app strips the hidden data from the digits.
+                                    Utilisez cette solution si une application de messagerie supprime les données cachées des chiffres.
                                   </p>
                                 </div>
                               )}
@@ -1614,16 +1640,16 @@
                               <div className="flex justify-end gap-2">
                                 <button
                                   type="button"
-                                  onClick={toggleImportSection}
+                                  onClick={() => handleSelectSyncTab('create')}
                                   className="px-4 py-2 bg-slate-200 text-slate-700 font-semibold rounded-md hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400"
                                 >
-                                  Cancel
+                                  Retour
                                 </button>
                                 <button
                                   type="submit"
                                   className="px-4 py-2 bg-green-600 text-white font-semibold rounded-md shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                                 >
-                                  Import words
+                                  Importer les mots
                                 </button>
                               </div>
                             </form>
