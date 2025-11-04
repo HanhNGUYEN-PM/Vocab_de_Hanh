@@ -6,4 +6,5 @@ export interface VocabularyItem {
   pinyin: string;
   phonetic: string;
   hanViet: string;
+  isFavorite?: boolean;
 }
