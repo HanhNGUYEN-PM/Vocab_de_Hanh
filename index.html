@@ -717,8 +717,13 @@ Bưu điện        邮局    yóujú   dấu chú bưu cục
             const [selectedAnswerId, setSelectedAnswerId] = useState(null);
             const [isAnswered, setIsAnswered] = useState(false);
             const [isFinished, setIsFinished] = useState(false);
+            const autoAdvanceTimeoutRef = useRef(null);
 
             const generateNewQuiz = useCallback(() => {
+                if (autoAdvanceTimeoutRef.current) {
+                    window.clearTimeout(autoAdvanceTimeoutRef.current);
+                    autoAdvanceTimeoutRef.current = null;
+                }
                 const shuffledVocabulary = shuffleArray(vocabulary);
                 const questionsForQuiz = shuffledVocabulary.slice(0, Math.min(10, vocabulary.length));
                 setQuizQuestions(questionsForQuiz);
@@ -750,6 +755,12 @@ Bưu điện        邮局    yóujú   dấu chú bưu cục
 
             const currentQuestion = quizQuestions[currentQuestionIndex];
 
+            useEffect(() => () => {
+                if (autoAdvanceTimeoutRef.current) {
+                    window.clearTimeout(autoAdvanceTimeoutRef.current);
+                }
+            }, []);
+
             const handleAnswer = (selectedId) => {
                 if (isAnswered) {
                     return;
@@ -759,6 +770,12 @@ Bưu điện        邮局    yóujú   dấu chú bưu cục
                 if (currentQuestion && selectedId === currentQuestion.id) {
                     setScore((prev) => prev + 1);
                 }
+                if (autoAdvanceTimeoutRef.current) {
+                    window.clearTimeout(autoAdvanceTimeoutRef.current);
+                }
+                autoAdvanceTimeoutRef.current = window.setTimeout(() => {
+                    handleNextQuestion();
+                }, 600);
             };
 
             const handleNextQuestion = () => {
@@ -769,6 +786,7 @@ Bưu điện        邮局    yóujú   dấu chú bưu cục
                 } else {
                     setIsFinished(true);
                 }
+                autoAdvanceTimeoutRef.current = null;
             };
 
             if (isFinished) {
@@ -843,13 +861,10 @@ Bưu điện        邮局    yóujú   dấu chú bưu cục
                         ))}
                     </div>
                     {isAnswered && (
-                        <div className="mt-8 text-center">
-                            <button
-                                onClick={handleNextQuestion}
-                                className="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105"
-                            >
-                                {currentQuestionIndex < quizQuestions.length - 1 ? 'Next Question' : 'Finish Quiz'}
-                            </button>
+                        <div className="mt-8 text-center text-slate-500 text-sm">
+                            {currentQuestionIndex < quizQuestions.length - 1
+                                ? 'Chargement de la question suivante...'
+                                : 'Affichage des résultats...'}
                         </div>
                     )}
                 </div>
