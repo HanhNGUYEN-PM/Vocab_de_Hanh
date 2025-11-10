@@ -23,8 +23,8 @@
         const { useState, useEffect, useRef, useCallback } = React;
 
         const VOCAB_STORAGE_KEY = 'vocabulary-builder-data';
-        const REMOTE_SYNC_ENDPOINT = 'https://dweet.io/get/latest/dweet/for/vocab-de-hanh-sync';
-        const REMOTE_SYNC_PUBLISH_ENDPOINT = 'https://dweet.io/dweet/for/vocab-de-hanh-sync';
+        const REMOTE_SYNC_ENDPOINT = 'https://dweet.io/get/latest/dweet/for/vocab-de-hanh-database';
+        const REMOTE_SYNC_PUBLISH_ENDPOINT = 'https://dweet.io/dweet/for/vocab-de-hanh-database';
         const REMOTE_SYNC_QUERY_KEY = 'payload';
         const SYNC_POLL_INTERVAL = 15000;
 
@@ -1099,14 +1099,20 @@ Bưu điện        邮局    yóujú   dấu chú bưu cục
 
                     const remoteItems = Array.isArray(decoded.vocabulary) ? decoded.vocabulary : [];
                     const sanitized = sanitizeVocabulary(remoteItems);
-                    if (!sanitized.length) {
-                        return;
-                    }
-
                     const effectiveRevision =
                         typeof decoded.updatedAt === 'number' && decoded.updatedAt > 0 ? decoded.updatedAt : Date.now();
 
-                    if (effectiveRevision > localRevisionRef.current || (localRevisionRef.current === 0 && vocabulary.length === 0)) {
+                    if (!sanitized.length) {
+                        if (effectiveRevision > localRevisionRef.current && vocabulary.length > 0) {
+                            applyRemoteVocabulary([], effectiveRevision);
+                        }
+                        return;
+                    }
+
+                    if (
+                        effectiveRevision > localRevisionRef.current ||
+                        (localRevisionRef.current === 0 && vocabulary.length === 0)
+                    ) {
                         applyRemoteVocabulary(sanitized, effectiveRevision);
                     }
                 } catch (error) {
