@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { VocabularyItem } from './types';
 import VocabularyInput from './components/VocabularyInput';
 import Quiz from './components/Quiz';
@@ -7,65 +7,32 @@ import PlusIcon from './components/icons/PlusIcon';
 import LearnIcon from './components/icons/LearnIcon';
 import ManageIcon from './components/icons/ManageIcon';
 import ChevronDownIcon from './components/icons/ChevronDownIcon';
-import { fetchCloudSnapshot, saveCloudSnapshot } from './src/cloudDatabase';
-
-type View = 'add' | 'learn' | 'manage';
-type QuizScope = 'recent' | 'all';
-
-type PersistedPayload = {
-  vocabulary: VocabularyItem[];
-  updatedAt: number;
-};
 
 const VOCAB_STORAGE_KEY = 'vocabulary-builder-data';
-const SYNC_POLL_INTERVAL = 15000;
 
-type SyncStatus = 'idle' | 'syncing' | 'error';
+type View = 'add' | 'learn' | 'manage';
+type QuizScope = 'recent' | 'all' | 'favorites';
 
 const generateId = (prefix: string) => {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
     return crypto.randomUUID();
   }
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-};
 
-const formatRelativeTime = (timestamp: number) => {
-  const diff = Date.now() - timestamp;
-  if (diff < 10000) {
-    return 'il y a quelques secondes';
-  }
-  if (diff < 60000) {
-    const seconds = Math.floor(diff / 1000);
-    return `il y a ${seconds} seconde${seconds > 1 ? 's' : ''}`;
-  }
-  if (diff < 3600000) {
-    const minutes = Math.floor(diff / 60000);
-    return `il y a ${minutes} minute${minutes > 1 ? 's' : ''}`;
-  }
-  if (diff < 86400000) {
-    const hours = Math.floor(diff / 3600000);
-    return `il y a ${hours} heure${hours > 1 ? 's' : ''}`;
-  }
-  const days = Math.floor(diff / 86400000);
-  return `il y a ${days} jour${days > 1 ? 's' : ''}`;
+  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
 const sanitizeVocabulary = (items: VocabularyItem[]): VocabularyItem[] =>
   items
-    .filter((item) => item && typeof item === 'object')
-    .map((item, index) => {
-      const safeItem: VocabularyItem = {
-        id: typeof item.id === 'string' && item.id.trim() ? item.id : generateId(`remote-${index}`),
-        vietnamese: typeof item.vietnamese === 'string' ? item.vietnamese.trim() : '',
-        chinese: typeof item.chinese === 'string' ? item.chinese.trim() : '',
-        pinyin: typeof item.pinyin === 'string' ? item.pinyin.trim() : '',
-        phonetic: typeof item.phonetic === 'string' ? item.phonetic.trim() : '',
-        hanViet: typeof item.hanViet === 'string' ? item.hanViet.trim() : '',
-        isFavorite: Boolean(item.isFavorite),
-      };
-
-      return safeItem;
-    })
+    .filter((item): item is VocabularyItem => Boolean(item && typeof item === 'object'))
+    .map((item, index) => ({
+      id: typeof item.id === 'string' && item.id.trim() ? item.id : generateId(`word-${index}`),
+      vietnamese: typeof item.vietnamese === 'string' ? item.vietnamese.trim() : '',
+      chinese: typeof item.chinese === 'string' ? item.chinese.trim() : '',
+      pinyin: typeof item.pinyin === 'string' ? item.pinyin.trim() : '',
+      phonetic: typeof item.phonetic === 'string' ? item.phonetic.trim() : '',
+      hanViet: typeof item.hanViet === 'string' ? item.hanViet.trim() : '',
+      isFavorite: Boolean(item.isFavorite),
+    }))
     .filter((item) => item.vietnamese && item.chinese && item.pinyin && item.phonetic && item.hanViet);
 
 const App: React.FC = () => {
@@ -73,183 +40,51 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('add');
   const [isLearnDropdownOpen, setIsLearnDropdownOpen] = useState(false);
   const [quizScope, setQuizScope] = useState<QuizScope | null>(null);
-  const [isSyncReady, setIsSyncReady] = useState(false);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
-  const [syncError, setSyncError] = useState<string | null>(null);
-  const [lastSyncedAt, setLastSyncedAt] = useState<number | null>(null);
 
   const learnButtonRef = useRef<HTMLDivElement>(null);
-  const skipNextPushRef = useRef(false);
-  const localRevisionRef = useRef(0);
 
-  const persistVocabularyLocally = useCallback((items: VocabularyItem[], revision: number) => {
+  const persistVocabulary = useCallback((items: VocabularyItem[]) => {
     if (typeof localStorage === 'undefined') {
       return;
     }
 
     try {
-      const payload: PersistedPayload = {
-        vocabulary: items,
-        updatedAt: revision,
-      };
-      localStorage.setItem(VOCAB_STORAGE_KEY, JSON.stringify(payload));
+      localStorage.setItem(VOCAB_STORAGE_KEY, JSON.stringify(items));
     } catch (error) {
       console.error('Failed to save vocabulary to local storage:', error);
     }
   }, []);
-
-  const pushRemoteVocabulary = useCallback(
-    async (items: VocabularyItem[], revision: number) => {
-      if (!isSyncReady) {
-        return;
-      }
-
-      try {
-        setSyncStatus('syncing');
-        setSyncError(null);
-        const success = await saveCloudSnapshot(items, revision);
-        if (!success) {
-          throw new Error('Failed to persist snapshot to cloud storage');
-        }
-        setSyncStatus('idle');
-        setLastSyncedAt(Date.now());
-      } catch (error) {
-        console.error('Failed to sync vocabulary to remote storage:', error);
-        setSyncStatus('error');
-        setSyncError('La synchronisation automatique a échoué. Vos données sont enregistrées localement.');
-      }
-    },
-    [isSyncReady],
-  );
-
-  const applyRemoteVocabulary = useCallback(
-    (items: VocabularyItem[], revision: number) => {
-      const sanitized = sanitizeVocabulary(items);
-      skipNextPushRef.current = true;
-      localRevisionRef.current = revision;
-      persistVocabularyLocally(sanitized, revision);
-      setVocabulary(sanitized);
-      setLastSyncedAt(Date.now());
-      setSyncStatus('idle');
-      setSyncError(null);
-
-      setView((previousView) => {
-        if (sanitized.length === 0) {
-          return 'add';
-        }
-        if (sanitized.length < 3 && previousView === 'learn') {
-          return 'add';
-        }
-        if (sanitized.length >= 3 && previousView === 'add') {
-          return 'learn';
-        }
-        return previousView;
-      });
-
-      setQuizScope((previousScope) => {
-        if (sanitized.length < 3) {
-          return null;
-        }
-        return previousScope ?? 'all';
-      });
-    },
-    [persistVocabularyLocally],
-  );
-
-  const fetchRemoteVocabulary = useCallback(async () => {
-    if (!isSyncReady) {
-      return;
-    }
-
-    try {
-      const snapshot = await fetchCloudSnapshot();
-      if (!snapshot) {
-        return;
-      }
-
-      const remoteItems = Array.isArray(snapshot.vocabulary) ? snapshot.vocabulary : [];
-      const sanitized = sanitizeVocabulary(remoteItems);
-      const effectiveRevision =
-        typeof snapshot.updatedAt === 'number' && snapshot.updatedAt > 0 ? snapshot.updatedAt : Date.now();
-
-      if (sanitized.length === 0) {
-        if (effectiveRevision > localRevisionRef.current && vocabulary.length > 0) {
-          applyRemoteVocabulary([], effectiveRevision);
-        }
-        return;
-      }
-
-      if (
-        effectiveRevision > localRevisionRef.current ||
-        (localRevisionRef.current === 0 && vocabulary.length === 0)
-      ) {
-        applyRemoteVocabulary(sanitized, effectiveRevision);
-      }
-    } catch (error) {
-      console.error('Failed to pull vocabulary from remote storage:', error);
-      setSyncError((previous) => previous ?? "Impossible de contacter le service de synchronisation automatique pour l'instant.");
-    }
-  }, [applyRemoteVocabulary, isSyncReady, vocabulary]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
-    let initialVocabulary: VocabularyItem[] = [];
-    let initialRevision = 0;
-
     try {
-      const storedData = localStorage.getItem(VOCAB_STORAGE_KEY);
-      if (storedData) {
-        const parsed = JSON.parse(storedData) as unknown;
-        if (Array.isArray(parsed)) {
-          initialVocabulary = sanitizeVocabulary(parsed as VocabularyItem[]);
-          initialRevision = Date.now();
-          persistVocabularyLocally(initialVocabulary, initialRevision);
-        } else if (
-          parsed &&
-          typeof parsed === 'object' &&
-          Array.isArray((parsed as PersistedPayload).vocabulary)
-        ) {
-          initialVocabulary = sanitizeVocabulary((parsed as PersistedPayload).vocabulary);
-          initialRevision =
-            typeof (parsed as PersistedPayload).updatedAt === 'number'
-              ? (parsed as PersistedPayload).updatedAt
-              : Date.now();
-        }
+      const stored = localStorage.getItem(VOCAB_STORAGE_KEY);
+      if (!stored) {
+        return;
+      }
+
+      const parsed = JSON.parse(stored) as unknown;
+      if (!Array.isArray(parsed)) {
+        return;
+      }
+
+      const sanitized = sanitizeVocabulary(parsed as VocabularyItem[]);
+      if (sanitized.length === 0) {
+        return;
+      }
+
+      setVocabulary(sanitized);
+      if (sanitized.length >= 3) {
+        setView('learn');
+        setQuizScope('all');
       }
     } catch (error) {
       console.error('Failed to load vocabulary from local storage:', error);
     }
-
-    if (initialVocabulary.length > 0) {
-      setVocabulary(initialVocabulary);
-      if (initialVocabulary.length >= 3) {
-        setView('learn');
-        setQuizScope('all');
-      }
-    }
-
-    skipNextPushRef.current = true;
-    localRevisionRef.current = initialRevision;
-    setIsSyncReady(true);
-  }, [persistVocabularyLocally]);
-
-  useEffect(() => {
-    if (!isSyncReady) {
-      return;
-    }
-
-    void fetchRemoteVocabulary();
-    const interval = window.setInterval(() => {
-      void fetchRemoteVocabulary();
-    }, SYNC_POLL_INTERVAL);
-
-    return () => {
-      window.clearInterval(interval);
-    };
-  }, [fetchRemoteVocabulary, isSyncReady]);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -270,89 +105,64 @@ const App: React.FC = () => {
         return;
       }
 
-      let shouldSwitchToLearn = false;
-
+      let updated: VocabularyItem[] = [];
       setVocabulary((previousVocabulary) => {
-        const updatedVocabulary = [...previousVocabulary, ...newItems];
-        shouldSwitchToLearn = updatedVocabulary.length >= 3;
-        const revision = Date.now();
-        persistVocabularyLocally(updatedVocabulary, revision);
-        localRevisionRef.current = revision;
-
-        if (skipNextPushRef.current) {
-          skipNextPushRef.current = false;
-        } else {
-          void pushRemoteVocabulary(updatedVocabulary, revision);
-        }
-
-        return updatedVocabulary;
+        const normalizedNewItems = newItems.map((item, index) => ({
+          ...item,
+          id: item.id || generateId(`word-${previousVocabulary.length + index}`),
+          isFavorite: Boolean(item.isFavorite),
+        }));
+        updated = [...previousVocabulary, ...normalizedNewItems];
+        persistVocabulary(updated);
+        return updated;
       });
 
-      if (shouldSwitchToLearn) {
-        setView('learn');
-        setQuizScope('recent');
-      }
+      setView('learn');
+      setQuizScope((previous) => previous ?? 'recent');
     },
-    [persistVocabularyLocally, pushRemoteVocabulary],
+    [persistVocabulary],
   );
 
   const handleDeleteVocabularyItem = useCallback(
     (idToDelete: string) => {
-      let updatedLength = 0;
-      let changed = false;
-
+      let updated: VocabularyItem[] | null = null;
       setVocabulary((previousVocabulary) => {
-        const updatedVocabulary = previousVocabulary.filter((item) => item.id !== idToDelete);
-        if (updatedVocabulary.length === previousVocabulary.length) {
-          updatedLength = previousVocabulary.length;
+        const filtered = previousVocabulary.filter((item) => item.id !== idToDelete);
+        if (filtered.length === previousVocabulary.length) {
           return previousVocabulary;
         }
 
-        changed = true;
-        updatedLength = updatedVocabulary.length;
-        const revision = Date.now();
-        persistVocabularyLocally(updatedVocabulary, revision);
-        localRevisionRef.current = revision;
-
-        if (skipNextPushRef.current) {
-          skipNextPushRef.current = false;
-        } else {
-          void pushRemoteVocabulary(updatedVocabulary, revision);
-        }
-
-        return updatedVocabulary;
+        updated = filtered;
+        persistVocabulary(filtered);
+        return filtered;
       });
 
-      if (!changed) {
+      if (!updated) {
         return;
       }
 
-      setView((previousView) => {
-        if (updatedLength === 0) {
-          return 'add';
-        }
-        if (updatedLength < 3 && previousView === 'learn') {
-          return 'add';
-        }
-        return previousView;
-      });
-
-      setQuizScope((previousScope) => (updatedLength < 3 ? null : previousScope));
+      if (updated.length === 0) {
+        setView('add');
+        setQuizScope(null);
+      } else if (updated.length < 3 && view === 'learn') {
+        setView('add');
+        setQuizScope(null);
+      }
     },
-    [persistVocabularyLocally, pushRemoteVocabulary],
+    [persistVocabulary, view],
   );
 
   const handleUpdateVocabularyItem = useCallback(
     (updatedItem: VocabularyItem) => {
-      let changed = false;
-
       setVocabulary((previousVocabulary) => {
-        const updatedVocabulary = previousVocabulary.map((item) => {
+        let changed = false;
+        const updated = previousVocabulary.map((item) => {
           if (item.id === updatedItem.id) {
             changed = true;
             return {
               ...item,
               ...updatedItem,
+              isFavorite: Boolean(updatedItem.isFavorite),
             };
           }
           return item;
@@ -362,21 +172,73 @@ const App: React.FC = () => {
           return previousVocabulary;
         }
 
-        const revision = Date.now();
-        persistVocabularyLocally(updatedVocabulary, revision);
-        localRevisionRef.current = revision;
-
-        if (skipNextPushRef.current) {
-          skipNextPushRef.current = false;
-        } else {
-          void pushRemoteVocabulary(updatedVocabulary, revision);
-        }
-
-        return updatedVocabulary;
+        persistVocabulary(updated);
+        return updated;
       });
     },
-    [persistVocabularyLocally, pushRemoteVocabulary],
+    [persistVocabulary],
   );
+
+  const handleToggleFavorite = useCallback(
+    (id: string, next?: boolean) => {
+      setVocabulary((previousVocabulary) => {
+        let changed = false;
+        const updated = previousVocabulary.map((item) => {
+          if (item.id !== id) {
+            return item;
+          }
+
+          const newValue = typeof next === 'boolean' ? next : !item.isFavorite;
+          if (newValue === Boolean(item.isFavorite)) {
+            return item;
+          }
+
+          changed = true;
+          return {
+            ...item,
+            isFavorite: newValue,
+          };
+        });
+
+        if (!changed) {
+          return previousVocabulary;
+        }
+
+        persistVocabulary(updated);
+        return updated;
+      });
+    },
+    [persistVocabulary],
+  );
+
+  const handleWrongAnswer = useCallback(
+    (id: string) => {
+      setVocabulary((previousVocabulary) => {
+        let changed = false;
+        const updated = previousVocabulary.map((item) => {
+          if (item.id === id && !item.isFavorite) {
+            changed = true;
+            return {
+              ...item,
+              isFavorite: true,
+            };
+          }
+
+          return item;
+        });
+
+        if (!changed) {
+          return previousVocabulary;
+        }
+
+        persistVocabulary(updated);
+        return updated;
+      });
+    },
+    [persistVocabulary],
+  );
+
+  const favorites = useMemo(() => vocabulary.filter((item) => item.isFavorite), [vocabulary]);
 
   const handleStartQuiz = (scope: QuizScope) => {
     setQuizScope(scope);
@@ -384,29 +246,70 @@ const App: React.FC = () => {
     setIsLearnDropdownOpen(false);
   };
 
-  const hasEnoughVocabularyForQuiz = vocabulary.length >= 3;
   const hasAnyVocabulary = vocabulary.length > 0;
+  const hasEnoughVocabularyForQuiz = vocabulary.length >= 3;
+  const hasFavorites = favorites.length > 0;
+
+  const quizVocabulary = useMemo(() => {
+    if (quizScope === 'recent') {
+      return vocabulary.slice(-30);
+    }
+    if (quizScope === 'favorites') {
+      return favorites;
+    }
+    if (quizScope === 'all') {
+      return vocabulary;
+    }
+    return [];
+  }, [favorites, quizScope, vocabulary]);
+
+  const canStartQuiz =
+    hasEnoughVocabularyForQuiz &&
+    quizScope !== null &&
+    (quizScope !== 'favorites' || hasFavorites);
 
   const renderContent = () => {
     switch (view) {
       case 'add':
         return <VocabularyInput onSave={handleSaveVocabulary} existingVocabulary={vocabulary} />;
       case 'learn':
-        if (!quizScope || !hasEnoughVocabularyForQuiz) {
+        if (!canStartQuiz || quizVocabulary.length === 0) {
           return (
             <div className="text-center p-8 bg-white rounded-lg shadow-lg">
               <h2 className="text-2xl font-bold text-slate-700 mb-4">Bienvenue !</h2>
-              <p className="text-slate-600">Ajoutez au moins 3 mots de vocabulaire pour démarrer un quiz.</p>
-              <p className="text-slate-600">Rendez-vous dans l'onglet « Ajouter des mots » pour compléter votre liste.</p>
+              <p className="text-slate-600 mb-2">Ajoutez au moins 3 mots de vocabulaire pour démarrer un quiz.</p>
+              <p className="text-slate-600">
+                Vous pouvez aussi marquer des favoris pour vous concentrer sur les mots les plus difficiles.
+              </p>
             </div>
           );
         }
-        const quizTitle = quizScope === 'recent' ? 'Quiz : 30 derniers mots' : 'Quiz : Tous les mots';
-        const quizVocabulary = quizScope === 'recent' ? vocabulary.slice(-30) : vocabulary;
-        return <Quiz vocabulary={quizVocabulary} title={quizTitle} />;
+
+        const quizTitle =
+          quizScope === 'recent'
+            ? 'Quiz : 30 derniers mots'
+            : quizScope === 'favorites'
+            ? 'Quiz : Mots favoris'
+            : 'Quiz : Tous les mots';
+
+        return (
+          <Quiz
+            key={`${quizScope}-${quizVocabulary.length}`}
+            allVocabulary={vocabulary}
+            questionPool={quizVocabulary}
+            title={quizTitle}
+            onToggleFavorite={handleToggleFavorite}
+            onWrongAnswer={handleWrongAnswer}
+          />
+        );
       case 'manage':
         return hasAnyVocabulary ? (
-          <VocabularyManager vocabulary={vocabulary} onUpdate={handleUpdateVocabularyItem} onDelete={handleDeleteVocabularyItem} />
+          <VocabularyManager
+            vocabulary={vocabulary}
+            onUpdate={handleUpdateVocabularyItem}
+            onDelete={handleDeleteVocabularyItem}
+            onToggleFavorite={handleToggleFavorite}
+          />
         ) : (
           <div className="text-center p-8 bg-white rounded-lg shadow-lg">
             <h2 className="text-2xl font-bold text-slate-700 mb-4">Aucun mot à gérer</h2>
@@ -419,26 +322,15 @@ const App: React.FC = () => {
     }
   };
 
-  const syncStatusLabel = (() => {
-    if (syncStatus === 'syncing') {
-      return 'Synchronisation automatique en cours…';
-    }
-    if (syncError) {
-      return syncError;
-    }
-    if (lastSyncedAt) {
-      return `Synchronisé automatiquement ${formatRelativeTime(lastSyncedAt)}`;
-    }
-    return 'Synchronisation automatique activée';
-  })();
-
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 font-sans">
       <header className="bg-white shadow-md">
         <div className="container mx-auto px-4 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-700 tracking-tight">Vocabulary Builder</h1>
-            <p className={`text-xs mt-1 ${syncStatus === 'error' ? 'text-red-600' : 'text-slate-500'}`}>{syncStatusLabel}</p>
+            <p className="text-xs mt-1 text-slate-500">
+              Vos mots sont enregistrés dans ce navigateur. Marquez des favoris pour les revoir rapidement.
+            </p>
           </div>
           <nav className="flex flex-wrap gap-2">
             <button
@@ -467,7 +359,7 @@ const App: React.FC = () => {
                 />
               </button>
               {isLearnDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white rounded-md shadow-lg py-1 z-10 ring-1 ring-black ring-opacity-5">
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-10 ring-1 ring-black ring-opacity-5">
                   <button
                     onClick={() => handleStartQuiz('recent')}
                     className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
@@ -479,6 +371,13 @@ const App: React.FC = () => {
                     className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
                   >
                     Tous les mots
+                  </button>
+                  <button
+                    onClick={() => handleStartQuiz('favorites')}
+                    disabled={!hasFavorites}
+                    className="block w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Mots favoris
                   </button>
                 </div>
               )}
@@ -498,16 +397,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        {syncError && (
-          <div className="max-w-4xl mx-auto mb-6">
-            <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">
-              {syncError}
-            </div>
-          </div>
-        )}
-        {renderContent()}
-      </main>
+      <main className="container mx-auto px-4 py-8">{renderContent()}</main>
     </div>
   );
 };

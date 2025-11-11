@@ -1,18 +1,19 @@
-
 import React, { useState, ChangeEvent } from 'react';
 import type { VocabularyItem } from '../types';
 import EditIcon from './icons/EditIcon';
 import DeleteIcon from './icons/DeleteIcon';
 import CheckIcon from './icons/CheckIcon';
 import XIcon from './icons/XIcon';
+import StarIcon from './icons/StarIcon';
 
 interface VocabularyManagerProps {
   vocabulary: VocabularyItem[];
   onUpdate: (item: VocabularyItem) => void;
   onDelete: (id: string) => void;
+  onToggleFavorite: (id: string) => void;
 }
 
-const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpdate, onDelete }) => {
+const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpdate, onDelete, onToggleFavorite }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editedItem, setEditedItem] = useState<VocabularyItem | null>(null);
 
@@ -39,9 +40,9 @@ const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpd
     }
   };
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (editedItem) {
-      setEditedItem({ ...editedItem, [e.target.name]: e.target.value });
+      setEditedItem({ ...editedItem, [event.target.name]: event.target.value });
     }
   };
 
@@ -51,7 +52,7 @@ const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpd
         <input
           type="text"
           name={field}
-          value={editedItem[field]}
+          value={editedItem[field] as string}
           onChange={handleInputChange}
           className="w-full bg-slate-50 border border-indigo-300 rounded-md px-2 py-1 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
         />
@@ -64,7 +65,7 @@ const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpd
     <div className="bg-white p-6 md:p-8 rounded-lg shadow-lg animate-fade-in">
       <h2 className="text-2xl font-bold text-slate-700 mb-6">Manage Vocabulary Collection</h2>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[800px] text-sm text-left text-slate-600">
+        <table className="w-full min-w-[880px] text-sm text-left text-slate-600">
           <thead className="text-xs text-slate-700 uppercase bg-slate-100">
             <tr>
               <th scope="col" className="px-4 py-3">Vietnamese</th>
@@ -72,6 +73,7 @@ const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpd
               <th scope="col" className="px-4 py-3">Pinyin</th>
               <th scope="col" className="px-4 py-3">Phonetic</th>
               <th scope="col" className="px-4 py-3">Hán Việt</th>
+              <th scope="col" className="px-4 py-3 text-center">Favori</th>
               <th scope="col" className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -84,22 +86,51 @@ const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpd
                 <td className="px-4 py-3">{renderCell('phonetic', item)}</td>
                 <td className="px-4 py-3">{renderCell('hanViet', item)}</td>
                 <td className="px-4 py-3">
+                  <button
+                    type="button"
+                    onClick={() => onToggleFavorite(item.id)}
+                    className="mx-auto flex items-center justify-center w-9 h-9 rounded-full border border-slate-200 bg-white hover:bg-indigo-50 transition-colors"
+                    title={item.isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                  >
+                    <StarIcon
+                      filled={Boolean(item.isFavorite)}
+                      className={`w-5 h-5 ${item.isFavorite ? 'text-yellow-500' : 'text-slate-400'}`}
+                    />
+                  </button>
+                </td>
+                <td className="px-4 py-3">
                   <div className="flex justify-end items-center space-x-2">
                     {editingId === item.id ? (
                       <>
-                        <button onClick={handleSave} className="p-2 text-green-600 hover:text-green-800 rounded-full hover:bg-green-100" title="Save">
+                        <button
+                          onClick={handleSave}
+                          className="p-2 text-green-600 hover:text-green-800 rounded-full hover:bg-green-100"
+                          title="Save"
+                        >
                           <CheckIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={handleCancel} className="p-2 text-slate-500 hover:text-slate-700 rounded-full hover:bg-slate-200" title="Cancel">
+                        <button
+                          onClick={handleCancel}
+                          className="p-2 text-slate-500 hover:text-slate-700 rounded-full hover:bg-slate-200"
+                          title="Cancel"
+                        >
                           <XIcon className="w-5 h-5" />
                         </button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => handleEdit(item)} className="p-2 text-blue-600 hover:text-blue-800 rounded-full hover:bg-blue-100" title="Edit">
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="p-2 text-blue-600 hover:text-blue-800 rounded-full hover:bg-blue-100"
+                          title="Edit"
+                        >
                           <EditIcon className="w-5 h-5" />
                         </button>
-                        <button onClick={() => handleDelete(item.id, item.vietnamese)} className="p-2 text-red-600 hover:text-red-800 rounded-full hover:bg-red-100" title="Delete">
+                        <button
+                          onClick={() => handleDelete(item.id, item.vietnamese)}
+                          className="p-2 text-red-600 hover:text-red-800 rounded-full hover:bg-red-100"
+                          title="Delete"
+                        >
                           <DeleteIcon className="w-5 h-5" />
                         </button>
                       </>
