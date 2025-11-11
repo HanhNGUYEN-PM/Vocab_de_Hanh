@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import type { VocabularyItem } from '../types';
 import CheckIcon from './icons/CheckIcon';
 import XIcon from './icons/XIcon';
@@ -27,6 +27,7 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, title }) => {
   const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const autoAdvanceTimeoutRef = useRef<number | null>(null);
 
   const currentQuestion = useMemo(() => {
     if (quizQuestions.length === 0) return null;
@@ -34,9 +35,13 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, title }) => {
   }, [currentQuestionIndex, quizQuestions]);
 
   const generateNewQuiz = useCallback(() => {
+    if (autoAdvanceTimeoutRef.current) {
+      window.clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
     const shuffledVocabulary = shuffleArray(vocabulary);
     const questionsForQuiz = shuffledVocabulary.slice(0, Math.min(10, vocabulary.length));
-    
+
     setQuizQuestions(questionsForQuiz);
     setCurrentQuestionIndex(0);
     setScore(0);
@@ -65,15 +70,29 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, title }) => {
     }
   }, [currentQuestion, vocabulary]);
 
+  useEffect(() => () => {
+    if (autoAdvanceTimeoutRef.current) {
+      window.clearTimeout(autoAdvanceTimeoutRef.current);
+    }
+  }, []);
+
   const handleAnswer = (selectedId: string) => {
     if (isAnswered) return;
-    
+
     setSelectedAnswerId(selectedId);
     setIsAnswered(true);
 
     if (selectedId === currentQuestion?.id) {
-      setScore(score + 1);
+      setScore((prevScore) => prevScore + 1);
     }
+
+    if (autoAdvanceTimeoutRef.current) {
+      window.clearTimeout(autoAdvanceTimeoutRef.current);
+    }
+
+    autoAdvanceTimeoutRef.current = window.setTimeout(() => {
+      handleNextQuestion();
+    }, 600);
   };
 
   const handleNextQuestion = () => {
@@ -84,6 +103,7 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, title }) => {
     } else {
       setIsFinished(true);
     }
+    autoAdvanceTimeoutRef.current = null;
   };
 
   if (isFinished) {
@@ -166,13 +186,10 @@ const Quiz: React.FC<QuizProps> = ({ vocabulary, title }) => {
       </div>
       
       {isAnswered && (
-        <div className="mt-8 text-center">
-            <button
-                onClick={handleNextQuestion}
-                className="px-8 py-3 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-transform transform hover:scale-105"
-            >
-                {currentQuestionIndex < quizQuestions.length - 1 ? 'Next Question' : 'Finish Quiz'}
-            </button>
+        <div className="mt-8 text-center text-slate-500 text-sm">
+          {currentQuestionIndex < quizQuestions.length - 1
+            ? 'Chargement de la question suivante...'
+            : 'Affichage des résultats...'}
         </div>
       )}
     </div>
