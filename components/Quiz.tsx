@@ -142,10 +142,6 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
 
       const utterances: SpeechSynthesisUtterance[] = [];
 
-      if (item.vietnamese) {
-        utterances.push(buildUtterance(item.vietnamese, 'vi-VN', ['vi']));
-      }
-
       if (item.chinese) {
         utterances.push(buildUtterance(item.chinese, 'zh-CN', ['zh-HK', 'zh-TW', 'zh', 'cmn']));
       }
