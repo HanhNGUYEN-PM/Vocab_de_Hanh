@@ -174,7 +174,9 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
     setRecentAnswer(currentQuestion);
     speakCurrentWord(currentQuestion);
 
-    if (selectedId === currentQuestion.id) {
+    const isCorrect = selectedId === currentQuestion.id;
+
+    if (isCorrect) {
       setScore((prevScore) => prevScore + 1);
     } else {
       onWrongAnswer(currentQuestion.id);
@@ -184,9 +186,11 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
       window.clearTimeout(autoAdvanceTimeoutRef.current);
     }
 
+    const delay = isCorrect ? 1200 : 2000;
+
     autoAdvanceTimeoutRef.current = window.setTimeout(() => {
       handleNextQuestion();
-    }, 1200);
+    }, delay);
   };
 
   const handleNextQuestion = () => {
