@@ -103,18 +103,14 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
   }, []);
 
   const speakCurrentWord = useCallback(
-    (item: VocabularyItem) => {
-      if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-        return;
+    (item: VocabularyItem): Promise<void> => {
+      if (typeof window === 'undefined' || !('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+        return Promise.resolve();
       }
 
       const synth = window.speechSynthesis;
       if (!synth) {
-        return;
-      }
-
-      if (typeof SpeechSynthesisUtterance === 'undefined') {
-        return;
+        return Promise.resolve();
       }
 
       synth.cancel();
@@ -149,20 +145,41 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
         utterances.push(buildUtterance(item.chinese, ['zh-CN', 'zh', 'cmn']));
       }
 
-      utterances.forEach((utterance, index) => {
-        if (index === 0) {
-          synth.speak(utterance);
-          return;
-        }
+      if (utterances.length === 0) {
+        return Promise.resolve();
+      }
 
-        const previous = utterances[index - 1];
-        previous.addEventListener(
-          'end',
-          () => {
-            synth.speak(utterance);
-          },
-          { once: true },
-        );
+      return new Promise((resolve) => {
+        const speakUtterance = (index: number) => {
+          if (index >= utterances.length) {
+            resolve();
+            return;
+          }
+
+          const utterance = utterances[index];
+
+          const cleanup = () => {
+            utterance.removeEventListener('end', handleEnd);
+            utterance.removeEventListener('error', handleError);
+          };
+
+          const handleEnd = () => {
+            cleanup();
+            speakUtterance(index + 1);
+          };
+
+          const handleError = () => {
+            cleanup();
+            speakUtterance(index + 1);
+          };
+
+          utterance.addEventListener('end', handleEnd);
+          utterance.addEventListener('error', handleError);
+
+          synth.speak(utterance);
+        };
+
+        speakUtterance(0);
       });
     },
     [],
@@ -176,7 +193,6 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
     setSelectedAnswerId(selectedId);
     setIsAnswered(true);
     setRecentAnswer(currentQuestion);
-    speakCurrentWord(currentQuestion);
 
     const isCorrect = selectedId === currentQuestion.id;
 
@@ -192,9 +208,19 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
 
     const delay = isCorrect ? 1200 : 2000;
 
-    autoAdvanceTimeoutRef.current = window.setTimeout(() => {
-      handleNextQuestion();
-    }, delay);
+    const scheduleAdvance = () => {
+      autoAdvanceTimeoutRef.current = window.setTimeout(() => {
+        handleNextQuestion();
+      }, delay);
+    };
+
+    speakCurrentWord(currentQuestion)
+      .catch(() => {
+        // Ignore speech synthesis errors and continue advancing.
+      })
+      .finally(() => {
+        scheduleAdvance();
+      });
   };
 
   const handleNextQuestion = () => {
