@@ -117,32 +117,37 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
 
       const voices = voicesRef.current.length > 0 ? voicesRef.current : synth.getVoices();
 
-      const buildUtterance = (text: string, preferredLangs: string[]): SpeechSynthesisUtterance => {
+      const buildUtterance = (
+        text: string,
+        primaryLang: string,
+        fallbackLangs: string[] = [],
+      ): SpeechSynthesisUtterance => {
         const utterance = new SpeechSynthesisUtterance(text);
-        for (const lang of preferredLangs) {
-          const matchingVoice = voices.find((voice) => voice.lang?.toLowerCase().startsWith(lang.toLowerCase())) ?? null;
+        const languagePreferences = [primaryLang, ...fallbackLangs];
+
+        for (const lang of languagePreferences) {
+          const normalizedLang = lang.toLowerCase();
+          const matchingVoice =
+            voices.find((voice) => voice.lang?.toLowerCase().startsWith(normalizedLang)) ?? null;
+
           if (matchingVoice) {
             utterance.voice = matchingVoice;
-            utterance.lang = matchingVoice.lang;
-            return utterance;
+            break;
           }
         }
 
-        if (preferredLangs[0]) {
-          utterance.lang = preferredLangs[0];
-        }
-
+        utterance.lang = primaryLang;
         return utterance;
       };
 
       const utterances: SpeechSynthesisUtterance[] = [];
 
       if (item.vietnamese) {
-        utterances.push(buildUtterance(item.vietnamese, ['vi-VN', 'vi']));
+        utterances.push(buildUtterance(item.vietnamese, 'vi-VN', ['vi']));
       }
 
       if (item.chinese) {
-        utterances.push(buildUtterance(item.chinese, ['zh-CN', 'zh', 'cmn']));
+        utterances.push(buildUtterance(item.chinese, 'zh-CN', ['zh-HK', 'zh-TW', 'zh', 'cmn']));
       }
 
       if (utterances.length === 0) {
