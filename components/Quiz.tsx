@@ -29,7 +29,9 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
   const [selectedAnswerId, setSelectedAnswerId] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [recentAnswer, setRecentAnswer] = useState<VocabularyItem | null>(null);
   const autoAdvanceTimeoutRef = useRef<number | null>(null);
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
 
   const currentQuestionId = quizQuestionIds[currentQuestionIndex] ?? null;
   const currentQuestion = useMemo(
@@ -76,11 +78,95 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
     setChoices(options);
   }, [allVocabulary, currentQuestion]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      return () => {};
+    }
+
+    const synth = window.speechSynthesis;
+    const updateVoices = () => {
+      voicesRef.current = synth.getVoices();
+    };
+
+    updateVoices();
+    synth.addEventListener('voiceschanged', updateVoices);
+
+    return () => {
+      synth.removeEventListener('voiceschanged', updateVoices);
+    };
+  }, []);
+
   useEffect(() => () => {
     if (autoAdvanceTimeoutRef.current) {
       window.clearTimeout(autoAdvanceTimeoutRef.current);
     }
   }, []);
+
+  const speakCurrentWord = useCallback(
+    (item: VocabularyItem) => {
+      if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+        return;
+      }
+
+      const synth = window.speechSynthesis;
+      if (!synth) {
+        return;
+      }
+
+      if (typeof SpeechSynthesisUtterance === 'undefined') {
+        return;
+      }
+
+      synth.cancel();
+
+      const voices = voicesRef.current.length > 0 ? voicesRef.current : synth.getVoices();
+
+      const buildUtterance = (text: string, preferredLangs: string[]): SpeechSynthesisUtterance => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        for (const lang of preferredLangs) {
+          const matchingVoice = voices.find((voice) => voice.lang?.toLowerCase().startsWith(lang.toLowerCase())) ?? null;
+          if (matchingVoice) {
+            utterance.voice = matchingVoice;
+            utterance.lang = matchingVoice.lang;
+            return utterance;
+          }
+        }
+
+        if (preferredLangs[0]) {
+          utterance.lang = preferredLangs[0];
+        }
+
+        return utterance;
+      };
+
+      const utterances: SpeechSynthesisUtterance[] = [];
+
+      if (item.chinese) {
+        utterances.push(buildUtterance(item.chinese, ['zh-CN', 'zh', 'cmn']));
+      }
+
+      if (item.vietnamese) {
+        utterances.push(buildUtterance(item.vietnamese, ['vi-VN', 'vi']));
+      }
+
+      utterances.forEach((utterance, index) => {
+        if (index === 0) {
+          synth.speak(utterance);
+          return;
+        }
+
+        const previous = utterances[index - 1];
+        previous.addEventListener(
+          'end',
+          () => {
+            synth.speak(utterance);
+          },
+          { once: true },
+        );
+      });
+    },
+    [],
+  );
 
   const handleAnswer = (selectedId: string) => {
     if (isAnswered || !currentQuestion) {
@@ -89,6 +175,8 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
 
     setSelectedAnswerId(selectedId);
     setIsAnswered(true);
+    setRecentAnswer(currentQuestion);
+    speakCurrentWord(currentQuestion);
 
     if (selectedId === currentQuestion.id) {
       setScore((prevScore) => prevScore + 1);
@@ -102,13 +190,15 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
 
     autoAdvanceTimeoutRef.current = window.setTimeout(() => {
       handleNextQuestion();
-    }, 600);
+    }, 1200);
   };
 
   const handleNextQuestion = () => {
     if (quizQuestionIds.length === 0) {
       return;
     }
+
+    setRecentAnswer(null);
 
     if (currentQuestionIndex < quizQuestionIds.length - 1) {
       setCurrentQuestionIndex((previous) => previous + 1);
@@ -237,6 +327,17 @@ const Quiz: React.FC<QuizProps> = ({ allVocabulary, questionPool, title, onToggl
           {currentQuestionIndex < quizQuestionIds.length - 1
             ? 'Chargement de la question suivante...'
             : 'Affichage des résultats...'}
+        </div>
+      )}
+
+      {recentAnswer && (
+        <div className="mt-6 text-center">
+          <div className="inline-block px-4 py-2 bg-green-50 text-green-700 rounded-full font-semibold shadow-sm">
+            Bonne réponse : <span className="font-bold text-green-800">{recentAnswer.chinese}</span>
+          </div>
+          <div className="mt-2 text-sm text-green-600">
+            {recentAnswer.pinyin} • {recentAnswer.phonetic}
+          </div>
         </div>
       )}
     </div>
