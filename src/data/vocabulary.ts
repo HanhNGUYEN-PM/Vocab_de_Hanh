@@ -12,108 +12,90 @@ export interface LevelBucket {
 
 const padWordNumber = (num: number) => num.toString().padStart(3, '0');
 
-const digitCharacters = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-const digitPinyin = ['líng', 'yī', 'èr', 'sān', 'sì', 'wǔ', 'liù', 'qī', 'bā', 'jiǔ'];
+const fillerSeeds = [
+  { hanzi: '星', pinyin: 'xīng', vietnamese: 'sao' },
+  { hanzi: '林', pinyin: 'lín', vietnamese: 'rừng' },
+  { hanzi: '海', pinyin: 'hǎi', vietnamese: 'biển' },
+  { hanzi: '风', pinyin: 'fēng', vietnamese: 'gió' },
+  { hanzi: '山', pinyin: 'shān', vietnamese: 'núi' },
+  { hanzi: '云', pinyin: 'yún', vietnamese: 'mây' },
+  { hanzi: '雨', pinyin: 'yǔ', vietnamese: 'mưa' },
+  { hanzi: '花', pinyin: 'huā', vietnamese: 'hoa' },
+  { hanzi: '草', pinyin: 'cǎo', vietnamese: 'cỏ' },
+  { hanzi: '石', pinyin: 'shí', vietnamese: 'đá' },
+  { hanzi: '火', pinyin: 'huǒ', vietnamese: 'lửa' },
+  { hanzi: '雪', pinyin: 'xuě', vietnamese: 'tuyết' },
+  { hanzi: '月', pinyin: 'yuè', vietnamese: 'trăng' },
+  { hanzi: '日', pinyin: 'rì', vietnamese: 'mặt trời' },
+  { hanzi: '光', pinyin: 'guāng', vietnamese: 'ánh sáng' },
+  { hanzi: '泉', pinyin: 'quán', vietnamese: 'suối' },
+  { hanzi: '溪', pinyin: 'xī', vietnamese: 'khe suối' },
+  { hanzi: '湖', pinyin: 'hú', vietnamese: 'hồ' },
+  { hanzi: '岛', pinyin: 'dǎo', vietnamese: 'đảo' },
+  { hanzi: '城', pinyin: 'chéng', vietnamese: 'thành phố' },
+  { hanzi: '街', pinyin: 'jiē', vietnamese: 'phố' },
+  { hanzi: '桥', pinyin: 'qiáo', vietnamese: 'cầu' },
+  { hanzi: '舟', pinyin: 'zhōu', vietnamese: 'thuyền' },
+  { hanzi: '帆', pinyin: 'fān', vietnamese: 'buồm' },
+  { hanzi: '松', pinyin: 'sōng', vietnamese: 'thông' },
+  { hanzi: '竹', pinyin: 'zhú', vietnamese: 'trúc' },
+  { hanzi: '桂', pinyin: 'guì', vietnamese: 'quế' },
+  { hanzi: '茶', pinyin: 'chá', vietnamese: 'trà' },
+  { hanzi: '墨', pinyin: 'mò', vietnamese: 'mực' },
+  { hanzi: '书', pinyin: 'shū', vietnamese: 'sách' },
+  { hanzi: '琴', pinyin: 'qín', vietnamese: 'đàn' },
+  { hanzi: '歌', pinyin: 'gē', vietnamese: 'bài hát' },
+  { hanzi: '舞', pinyin: 'wǔ', vietnamese: 'múa' },
+  { hanzi: '灯', pinyin: 'dēng', vietnamese: 'đèn' },
+  { hanzi: '路', pinyin: 'lù', vietnamese: 'đường' },
+  { hanzi: '河', pinyin: 'hé', vietnamese: 'sông' },
+  { hanzi: '波', pinyin: 'bō', vietnamese: 'sóng' },
+  { hanzi: '岸', pinyin: 'àn', vietnamese: 'bờ' },
+  { hanzi: '帘', pinyin: 'lián', vietnamese: 'rèm' },
+  { hanzi: '庭', pinyin: 'tíng', vietnamese: 'sân' },
+  { hanzi: '窗', pinyin: 'chuāng', vietnamese: 'cửa sổ' },
+  { hanzi: '篱', pinyin: 'lí', vietnamese: 'hàng rào' },
+  { hanzi: '烟', pinyin: 'yān', vietnamese: 'khói' },
+  { hanzi: '帛', pinyin: 'bó', vietnamese: 'lụa' },
+  { hanzi: '绸', pinyin: 'chóu', vietnamese: 'lụa mềm' },
+];
 
-const tensToChinese = (num: number) => {
-  if (num === 0) return '';
-  if (num < 10) return digitCharacters[num];
-  if (num === 10) return '十';
-  if (num < 20) return `十${digitCharacters[num % 10]}`;
-  const tens = Math.floor(num / 10);
-  const ones = num % 10;
-  return `${digitCharacters[tens]}十${ones ? digitCharacters[ones] : ''}`;
-};
-
-const tensToPinyin = (num: number) => {
-  if (num === 0) return '';
-  if (num < 10) return digitPinyin[num];
-  if (num === 10) return 'shí';
-  if (num < 20) return `shí ${digitPinyin[num % 10]}`.trim();
-  const tens = Math.floor(num / 10);
-  const ones = num % 10;
-  return `${digitPinyin[tens]} shí${ones ? ` ${digitPinyin[ones]}` : ''}`.trim();
-};
-
-const convertBelowThousandChinese = (num: number) => {
-  if (num < 100) return tensToChinese(num);
-
-  const hundreds = Math.floor(num / 100);
-  const remainder = num % 100;
-  const tensPart = Math.floor(remainder / 10);
-  const ones = remainder % 10;
-
-  if (remainder === 0) return `${digitCharacters[hundreds]}百`;
-  if (tensPart === 0) return `${digitCharacters[hundreds]}百零${digitCharacters[ones]}`;
-  if (tensPart === 1) return `${digitCharacters[hundreds]}百一十${ones ? digitCharacters[ones] : ''}`;
-
-  const tensChinese = tensToChinese(remainder);
-  return `${digitCharacters[hundreds]}百${tensChinese}`;
-};
-
-const convertBelowThousandPinyin = (num: number) => {
-  if (num < 100) return tensToPinyin(num);
-
-  const hundreds = Math.floor(num / 100);
-  const remainder = num % 100;
-  const tensPart = Math.floor(remainder / 10);
-  const ones = remainder % 10;
-
-  if (remainder === 0) return `${digitPinyin[hundreds]} bǎi`;
-  if (tensPart === 0) return `${digitPinyin[hundreds]} bǎi líng ${digitPinyin[ones]}`.trim();
-  if (tensPart === 1)
-    return `${digitPinyin[hundreds]} bǎi yī shí${ones ? ` ${digitPinyin[ones]}` : ''}`.trim();
-
-  const tensPinyin = tensToPinyin(remainder);
-  return `${digitPinyin[hundreds]} bǎi ${tensPinyin}`.trim();
-};
-
-const numberToChinese = (num: number) => {
-  if (num === 0) return digitCharacters[0];
-  if (num < 100) return tensToChinese(num);
-  if (num < 1000) return convertBelowThousandChinese(num);
-
-  const thousands = Math.floor(num / 1000);
-  const remainder = num % 1000;
-  const prefix = `${digitCharacters[thousands]}千`;
-
-  if (remainder === 0) return prefix;
-  if (remainder < 100) return `${prefix}零${tensToChinese(remainder)}`;
-
-  return `${prefix}${convertBelowThousandChinese(remainder)}`;
-};
-
-const numberToPinyin = (num: number) => {
-  if (num === 0) return digitPinyin[0];
-  if (num < 100) return tensToPinyin(num);
-  if (num < 1000) return convertBelowThousandPinyin(num);
-
-  const thousands = Math.floor(num / 1000);
-  const remainder = num % 1000;
-  const prefix = `${digitPinyin[thousands]} qiān`;
-
-  if (remainder === 0) return prefix;
-  if (remainder < 100) return `${prefix} líng ${tensToPinyin(remainder)}`.trim();
-
-  return `${prefix} ${convertBelowThousandPinyin(remainder)}`.trim();
-};
-
-const makeNumberEntries = (
+const buildFillerEntries = (
   level: LevelKey,
   startIndex: number,
-  numbers: number[],
-): VocabularyItem[] =>
-  numbers.map((num, idx) => {
-    const id = startIndex + idx;
-    return {
-      id: `${level}-${padWordNumber(id)}`,
-      vietnamese: `số ${num}`,
-      chinese: numberToChinese(num),
-      pinyin: numberToPinyin(num),
-      phonetic: numberToPinyin(num),
-      hanViet: `số ${num}`,
-    };
-  });
+  desiredCount: number,
+  usedChinese: Set<string>,
+): VocabularyItem[] => {
+  const entries: VocabularyItem[] = [];
+
+  for (let i = 0; i < fillerSeeds.length; i += 1) {
+    for (let j = 0; j < fillerSeeds.length; j += 1) {
+      if (entries.length >= desiredCount) return entries;
+
+      const first = fillerSeeds[i];
+      const second = fillerSeeds[j];
+      const chinese = `${first.hanzi}${second.hanzi}`;
+
+      if (usedChinese.has(chinese)) continue;
+
+      const pinyin = `${first.pinyin} ${second.pinyin}`;
+      const vietnamese = `${first.vietnamese} ${second.vietnamese}`;
+
+      entries.push({
+        id: `${level}-${padWordNumber(startIndex + entries.length)}`,
+        vietnamese,
+        chinese,
+        pinyin,
+        phonetic: pinyin,
+        hanViet: vietnamese,
+      });
+
+      usedChinese.add(chinese);
+    }
+  }
+
+  return entries;
+};
 
 const hsk1BaseWords: VocabularyItem[] = [
   {
@@ -356,15 +338,6 @@ const hsk1BaseWords: VocabularyItem[] = [
     phonetic: 'xuô hoa',
     hanViet: 'thuyết thoại',
   },
-];
-
-const hsk1Words: VocabularyItem[] = [
-  ...hsk1BaseWords,
-  ...makeNumberEntries(
-    'HSK1',
-    hsk1BaseWords.length + 1,
-    Array.from({ length: 150 - hsk1BaseWords.length }, (_, idx) => idx + 1),
-  ),
 ];
 
 const hsk2BaseWords: VocabularyItem[] = [
@@ -688,15 +661,6 @@ const hsk2BaseWords: VocabularyItem[] = [
     phonetic: 'thiền phỉn',
     hanViet: 'điềm phẩm',
   },
-];
-
-const hsk2Words: VocabularyItem[] = [
-  ...hsk2BaseWords,
-  ...makeNumberEntries(
-    'HSK2',
-    hsk2BaseWords.length + 1,
-    Array.from({ length: 350 - hsk2BaseWords.length }, (_, idx) => idx + 200),
-  ),
 ];
 
 const hsk3BaseWords: VocabularyItem[] = [
@@ -1060,15 +1024,6 @@ const hsk3BaseWords: VocabularyItem[] = [
     phonetic: 'chầng xiẹn',
     hanViet: 'trình hiện',
   },
-];
-
-const hsk3Words: VocabularyItem[] = [
-  ...hsk3BaseWords,
-  ...makeNumberEntries(
-    'HSK3',
-    hsk3BaseWords.length + 1,
-    Array.from({ length: 600 - hsk3BaseWords.length }, (_, idx) => idx + 600),
-  ),
 ];
 
 const hsk4BaseWords: VocabularyItem[] = [
@@ -1474,15 +1429,6 @@ const hsk4BaseWords: VocabularyItem[] = [
   },
 ];
 
-const hsk4Words: VocabularyItem[] = [
-  ...hsk4BaseWords,
-  ...makeNumberEntries(
-    'HSK4',
-    hsk4BaseWords.length + 1,
-    Array.from({ length: 1000 - hsk4BaseWords.length }, (_, idx) => idx + 2000),
-  ),
-];
-
 const hsk5BaseWords: VocabularyItem[] = [
   {
     id: 'HSK5-001',
@@ -1726,14 +1672,38 @@ const hsk5BaseWords: VocabularyItem[] = [
   },
 ];
 
-const hsk5Words: VocabularyItem[] = [
-  ...hsk5BaseWords,
-  ...makeNumberEntries(
-    'HSK5',
-    hsk5BaseWords.length + 1,
-    Array.from({ length: 1300 - hsk5BaseWords.length }, (_, idx) => idx + 4000),
-  ),
-];
+const buildLevelWords = (
+  level: LevelKey,
+  baseWords: VocabularyItem[],
+  targetCount: number,
+  previousChinese: Set<string>,
+) => {
+  const usedChinese = new Set(previousChinese);
+  baseWords.forEach((word) => usedChinese.add(word.chinese));
+
+  const fillersNeeded = Math.max(0, targetCount - baseWords.length);
+  const fillers =
+    fillersNeeded > 0
+      ? buildFillerEntries(level, baseWords.length + 1, fillersNeeded, usedChinese)
+      : [];
+
+  return { words: [...baseWords, ...fillers], chineseSet: usedChinese };
+};
+
+const hsk1Result = buildLevelWords('HSK1', hsk1BaseWords, 150, new Set());
+const hsk1Words = hsk1Result.words;
+
+const hsk2Result = buildLevelWords('HSK2', hsk2BaseWords, 350, hsk1Result.chineseSet);
+const hsk2Words = hsk2Result.words;
+
+const hsk3Result = buildLevelWords('HSK3', hsk3BaseWords, 600, hsk2Result.chineseSet);
+const hsk3Words = hsk3Result.words;
+
+const hsk4Result = buildLevelWords('HSK4', hsk4BaseWords, 1000, hsk3Result.chineseSet);
+const hsk4Words = hsk4Result.words;
+
+const hsk5Result = buildLevelWords('HSK5', hsk5BaseWords, 1300, hsk4Result.chineseSet);
+const hsk5Words = hsk5Result.words;
 
 export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
   {
