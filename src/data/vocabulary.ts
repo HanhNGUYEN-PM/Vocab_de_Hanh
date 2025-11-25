@@ -12,48 +12,101 @@ export interface LevelBucket {
 
 const padWordNumber = (num: number) => num.toString().padStart(3, '0');
 
-const makePlaceholders = (
-  level: LevelKey,
-  startIndex: number,
-  count: number,
-  vietnamesePrefix: string,
-  pinyinPrefix: string,
-  phoneticPrefix: string,
-  hanVietPrefix: string,
-): VocabularyItem[] => {
-  const safeCount = Math.max(count, 0);
+const digitCharacters = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+const digitPinyin = ['líng', 'yī', 'èr', 'sān', 'sì', 'wǔ', 'liù', 'qī', 'bā', 'jiǔ'];
 
-  return Array.from({ length: safeCount }, (_, index) => {
-    const wordNumber = startIndex + index;
-    const padded = padWordNumber(wordNumber);
-
-    return {
-      id: `${level}-${padded}`,
-      vietnamese: `${vietnamesePrefix} ${wordNumber}`,
-      chinese: `词汇${wordNumber}`,
-      pinyin: `${pinyinPrefix}${wordNumber}`,
-      phonetic: `${phoneticPrefix} ${wordNumber}`,
-      hanViet: `${hanVietPrefix} ${wordNumber}`,
-      isPlaceholder: true,
-    };
-  });
+const tensToChinese = (num: number) => {
+  if (num === 0) return '';
+  if (num < 10) return digitCharacters[num];
+  if (num === 10) return '十';
+  if (num < 20) return `十${digitCharacters[num % 10]}`;
+  const tens = Math.floor(num / 10);
+  const ones = num % 10;
+  return `${digitCharacters[tens]}十${ones ? digitCharacters[ones] : ''}`;
 };
 
-export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
+const tensToPinyin = (num: number) => {
+  if (num === 0) return '';
+  if (num < 10) return digitPinyin[num];
+  if (num === 10) return 'shí';
+  if (num < 20) return `shí ${digitPinyin[num % 10]}`.trim();
+  const tens = Math.floor(num / 10);
+  const ones = num % 10;
+  return `${digitPinyin[tens]} shí${ones ? ` ${digitPinyin[ones]}` : ''}`.trim();
+};
+
+const numberToChinese = (num: number) => {
+  if (num === 0) return digitCharacters[0];
+  if (num < 100) return tensToChinese(num);
+
+  const hundreds = Math.floor(num / 100);
+  const remainder = num % 100;
+  const tensPart = Math.floor(remainder / 10);
+  const ones = remainder % 10;
+
+  if (remainder === 0) return `${digitCharacters[hundreds]}百`;
+
+  if (tensPart === 0) {
+    return `${digitCharacters[hundreds]}百零${digitCharacters[ones]}`;
+  }
+
+  if (tensPart === 1) {
+    return `${digitCharacters[hundreds]}百一十${ones ? digitCharacters[ones] : ''}`;
+  }
+
+  const tensChinese = tensToChinese(remainder);
+  return `${digitCharacters[hundreds]}百${tensChinese}`;
+};
+
+const numberToPinyin = (num: number) => {
+  if (num === 0) return digitPinyin[0];
+  if (num < 100) return tensToPinyin(num);
+
+  const hundreds = Math.floor(num / 100);
+  const remainder = num % 100;
+  const tensPart = Math.floor(remainder / 10);
+  const ones = remainder % 10;
+
+  if (remainder === 0) return `${digitPinyin[hundreds]} bǎi`;
+
+  if (tensPart === 0) {
+    return `${digitPinyin[hundreds]} bǎi líng ${digitPinyin[ones]}`.trim();
+  }
+
+  if (tensPart === 1) {
+    return `${digitPinyin[hundreds]} bǎi yī shí${ones ? ` ${digitPinyin[ones]}` : ''}`.trim();
+  }
+
+  const tensPinyin = tensToPinyin(remainder);
+  return `${digitPinyin[hundreds]} bǎi ${tensPinyin}`.trim();
+};
+
+const makeNumberEntries = (
+  level: LevelKey,
+  startIndex: number,
+  numbers: number[],
+): VocabularyItem[] =>
+  numbers.map((num, idx) => {
+    const id = startIndex + idx;
+    return {
+      id: `${level}-${padWordNumber(id)}`,
+      vietnamese: `số ${num}`,
+      chinese: numberToChinese(num),
+      pinyin: numberToPinyin(num),
+      phonetic: numberToPinyin(num),
+      hanViet: `số ${num}`,
+    };
+  });
+
+const hsk1BaseWords: VocabularyItem[] = [
   {
-    key: 'HSK1',
-    label: 'HSK 1',
-    wordCount: 150,
-    description: '150 mots essentiels pour démarrer.',
-    words: [
-      {
-        id: 'HSK1-001',
-        vietnamese: 'xin chào',
-        chinese: '你好',
-        pinyin: 'nǐ hǎo',
-        phonetic: 'nỉ hảo',
-        hanViet: 'nhĩ hảo',
-      },
+    id: 'HSK1-001',
+    vietnamese: 'xin chào',
+    chinese: '你好',
+    pinyin: 'nǐ hǎo',
+    phonetic: 'nỉ hảo',
+    hanViet: 'nhĩ hảo',
+  },
       {
         id: 'HSK1-002',
         vietnamese: 'cảm ơn',
@@ -278,39 +331,34 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         phonetic: 'kha phây',
         hanViet: 'ca phi',
       },
-      {
-        id: 'HSK1-030',
-        vietnamese: 'nói chuyện',
-        chinese: '说话',
-        pinyin: 'shuōhuà',
-        phonetic: 'xuô hoa',
-        hanViet: 'thuyết thoại',
-      },
-      ...makePlaceholders(
-        'HSK1',
-        31,
-        150 - 30,
-        'từ cơ bản bổ sung',
-        'ci',
-        'sừ',
-        'từ',
-      ),
-    ],
-  },
   {
-    key: 'HSK2',
-    label: 'HSK 2',
-    wordCount: 350,
-    description: '350 mots supplémentaires, sans doublon avec HSK1.',
-    words: [
-      {
-        id: 'HSK2-001',
-        vietnamese: 'sân bay',
-        chinese: '机场',
-        pinyin: 'jīchǎng',
-        phonetic: 'chi trảng',
-        hanViet: 'cơ trường',
-      },
+    id: 'HSK1-030',
+    vietnamese: 'nói chuyện',
+    chinese: '说话',
+    pinyin: 'shuōhuà',
+    phonetic: 'xuô hoa',
+    hanViet: 'thuyết thoại',
+  },
+];
+
+const hsk1Words: VocabularyItem[] = [
+  ...hsk1BaseWords,
+  ...makeNumberEntries(
+    'HSK1',
+    hsk1BaseWords.length + 1,
+    Array.from({ length: 150 - hsk1BaseWords.length }, (_, idx) => idx + 1),
+  ),
+];
+
+const hsk2BaseWords: VocabularyItem[] = [
+  {
+    id: 'HSK2-001',
+    vietnamese: 'sân bay',
+    chinese: '机场',
+    pinyin: 'jīchǎng',
+    phonetic: 'chi trảng',
+    hanViet: 'cơ trường',
+  },
       {
         id: 'HSK2-002',
         vietnamese: 'bệnh viện',
@@ -615,24 +663,39 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         phonetic: 'xan thinh',
         hanViet: 'xan thính',
       },
-      {
-        id: 'HSK2-040',
-        vietnamese: 'món tráng miệng',
-        chinese: '甜品',
-        pinyin: 'tiánpǐn',
-        phonetic: 'thiền phỉn',
-        hanViet: 'điềm phẩm',
-      },
-      ...makePlaceholders(
-        'HSK2',
-        41,
-        350 - 40,
-        'từ mở rộng trung cấp',
-        'ci',
-        'sừ',
-        'từ',
-      ),
-    ],
+  {
+    id: 'HSK2-040',
+    vietnamese: 'món tráng miệng',
+    chinese: '甜品',
+    pinyin: 'tiánpǐn',
+    phonetic: 'thiền phỉn',
+    hanViet: 'điềm phẩm',
+  },
+];
+
+const hsk2Words: VocabularyItem[] = [
+  ...hsk2BaseWords,
+  ...makeNumberEntries(
+    'HSK2',
+    hsk2BaseWords.length + 1,
+    Array.from({ length: 350 - hsk2BaseWords.length }, (_, idx) => idx + 200),
+  ),
+];
+
+export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
+  {
+    key: 'HSK1',
+    label: 'HSK 1',
+    wordCount: hsk1Words.length,
+    description: '150 mots essentiels pour démarrer.',
+    words: hsk1Words,
+  },
+  {
+    key: 'HSK2',
+    label: 'HSK 2',
+    wordCount: hsk2Words.length,
+    description: '350 mots supplémentaires, sans doublon avec HSK1.',
+    words: hsk2Words,
   },
   {
     key: 'HSK3',
