@@ -36,14 +36,18 @@ const App: React.FC = () => {
   );
 
   const handleGenerate = () => {
-    if (wordsForLevel.length === 0) {
-      setCurrentWord(null);
-      return;
+    try {
+      if (wordsForLevel.length === 0) {
+        setCurrentWord(null);
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * wordsForLevel.length);
+      const nextWord = wordsForLevel[randomIndex];
+      setCurrentWord(nextWord);
+    } catch (error) {
+      console.error("Échec lors de la génération d'un mot :", error);
     }
-    const randomIndex = Math.floor(Math.random() * wordsForLevel.length);
-    const nextWord = wordsForLevel[randomIndex];
-    setCurrentWord(nextWord);
-    handlePlayAudio(nextWord);
   };
 
   const handleAddFavorite = (item: VocabularyItem) => {
@@ -61,22 +65,37 @@ const App: React.FC = () => {
 
   const handlePlayAudio = (item: VocabularyItem) => {
     try {
-      if (item.audioUrl) {
-        const audio = new Audio(item.audioUrl);
-        void audio.play();
+      if (typeof window === 'undefined') {
         return;
       }
 
-      if ('speechSynthesis' in window) {
+      if (item.audioUrl && typeof Audio !== 'undefined') {
+        const audio = new Audio(item.audioUrl);
+        void audio.play().catch((err) => {
+          console.error('Lecture audio impossible :', err);
+        });
+        return;
+      }
+
+      const supportsSpeech =
+        typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance !== 'undefined';
+
+      if (supportsSpeech) {
         const utterance = new SpeechSynthesisUtterance(item.chinese || item.pinyin);
         utterance.lang = 'zh-CN';
-        speechSynthesis.cancel();
-        speechSynthesis.speak(utterance);
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
       }
     } catch (error) {
       console.error('Échec de la lecture audio :', error);
     }
   };
+
+  useEffect(() => {
+    if (currentWord) {
+      handlePlayAudio(currentWord);
+    }
+  }, [currentWord]);
 
   const isFavorite = currentWord ? favorites.some((fav) => fav.id === currentWord.id) : false;
 
