@@ -41,7 +41,9 @@ const App: React.FC = () => {
       return;
     }
     const randomIndex = Math.floor(Math.random() * wordsForLevel.length);
-    setCurrentWord(wordsForLevel[randomIndex]);
+    const nextWord = wordsForLevel[randomIndex];
+    setCurrentWord(nextWord);
+    handlePlayAudio(nextWord);
   };
 
   const handleAddFavorite = (item: VocabularyItem) => {
@@ -76,15 +78,9 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800">
       <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-semibold text-indigo-500 uppercase">Outil d'apprentissage du chinois</p>
-            <h1 className="text-3xl font-bold text-slate-800">Vocabulaire vietnamien · chinois</h1>
-            <p className="text-slate-600">Générez un mot, écoutez sa prononciation et ajoutez-le à vos favoris pour réviser.</p>
-          </div>
-          <div className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-md text-sm font-semibold border border-indigo-100">
-            Niveaux A1 → C2
-          </div>
+        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
+          <p className="text-sm font-semibold text-indigo-600">Outil d'apprentissage du chinois</p>
+          <span className="text-xs text-slate-500">Niveaux A1 → C2</span>
         </div>
       </header>
 
