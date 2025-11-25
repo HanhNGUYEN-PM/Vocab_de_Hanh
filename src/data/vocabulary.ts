@@ -10,93 +10,6 @@ export interface LevelBucket {
   words: VocabularyItem[];
 }
 
-const padWordNumber = (num: number) => num.toString().padStart(3, '0');
-
-const fillerSeeds = [
-  { hanzi: '星', pinyin: 'xīng', vietnamese: 'sao' },
-  { hanzi: '林', pinyin: 'lín', vietnamese: 'rừng' },
-  { hanzi: '海', pinyin: 'hǎi', vietnamese: 'biển' },
-  { hanzi: '风', pinyin: 'fēng', vietnamese: 'gió' },
-  { hanzi: '山', pinyin: 'shān', vietnamese: 'núi' },
-  { hanzi: '云', pinyin: 'yún', vietnamese: 'mây' },
-  { hanzi: '雨', pinyin: 'yǔ', vietnamese: 'mưa' },
-  { hanzi: '花', pinyin: 'huā', vietnamese: 'hoa' },
-  { hanzi: '草', pinyin: 'cǎo', vietnamese: 'cỏ' },
-  { hanzi: '石', pinyin: 'shí', vietnamese: 'đá' },
-  { hanzi: '火', pinyin: 'huǒ', vietnamese: 'lửa' },
-  { hanzi: '雪', pinyin: 'xuě', vietnamese: 'tuyết' },
-  { hanzi: '月', pinyin: 'yuè', vietnamese: 'trăng' },
-  { hanzi: '日', pinyin: 'rì', vietnamese: 'mặt trời' },
-  { hanzi: '光', pinyin: 'guāng', vietnamese: 'ánh sáng' },
-  { hanzi: '泉', pinyin: 'quán', vietnamese: 'suối' },
-  { hanzi: '溪', pinyin: 'xī', vietnamese: 'khe suối' },
-  { hanzi: '湖', pinyin: 'hú', vietnamese: 'hồ' },
-  { hanzi: '岛', pinyin: 'dǎo', vietnamese: 'đảo' },
-  { hanzi: '城', pinyin: 'chéng', vietnamese: 'thành phố' },
-  { hanzi: '街', pinyin: 'jiē', vietnamese: 'phố' },
-  { hanzi: '桥', pinyin: 'qiáo', vietnamese: 'cầu' },
-  { hanzi: '舟', pinyin: 'zhōu', vietnamese: 'thuyền' },
-  { hanzi: '帆', pinyin: 'fān', vietnamese: 'buồm' },
-  { hanzi: '松', pinyin: 'sōng', vietnamese: 'thông' },
-  { hanzi: '竹', pinyin: 'zhú', vietnamese: 'trúc' },
-  { hanzi: '桂', pinyin: 'guì', vietnamese: 'quế' },
-  { hanzi: '茶', pinyin: 'chá', vietnamese: 'trà' },
-  { hanzi: '墨', pinyin: 'mò', vietnamese: 'mực' },
-  { hanzi: '书', pinyin: 'shū', vietnamese: 'sách' },
-  { hanzi: '琴', pinyin: 'qín', vietnamese: 'đàn' },
-  { hanzi: '歌', pinyin: 'gē', vietnamese: 'bài hát' },
-  { hanzi: '舞', pinyin: 'wǔ', vietnamese: 'múa' },
-  { hanzi: '灯', pinyin: 'dēng', vietnamese: 'đèn' },
-  { hanzi: '路', pinyin: 'lù', vietnamese: 'đường' },
-  { hanzi: '河', pinyin: 'hé', vietnamese: 'sông' },
-  { hanzi: '波', pinyin: 'bō', vietnamese: 'sóng' },
-  { hanzi: '岸', pinyin: 'àn', vietnamese: 'bờ' },
-  { hanzi: '帘', pinyin: 'lián', vietnamese: 'rèm' },
-  { hanzi: '庭', pinyin: 'tíng', vietnamese: 'sân' },
-  { hanzi: '窗', pinyin: 'chuāng', vietnamese: 'cửa sổ' },
-  { hanzi: '篱', pinyin: 'lí', vietnamese: 'hàng rào' },
-  { hanzi: '烟', pinyin: 'yān', vietnamese: 'khói' },
-  { hanzi: '帛', pinyin: 'bó', vietnamese: 'lụa' },
-  { hanzi: '绸', pinyin: 'chóu', vietnamese: 'lụa mềm' },
-];
-
-const buildFillerEntries = (
-  level: LevelKey,
-  startIndex: number,
-  desiredCount: number,
-  usedChinese: Set<string>,
-): VocabularyItem[] => {
-  const entries: VocabularyItem[] = [];
-
-  for (let i = 0; i < fillerSeeds.length; i += 1) {
-    for (let j = 0; j < fillerSeeds.length; j += 1) {
-      if (entries.length >= desiredCount) return entries;
-
-      const first = fillerSeeds[i];
-      const second = fillerSeeds[j];
-      const chinese = `${first.hanzi}${second.hanzi}`;
-
-      if (usedChinese.has(chinese)) continue;
-
-      const pinyin = `${first.pinyin} ${second.pinyin}`;
-      const vietnamese = `${first.vietnamese} ${second.vietnamese}`;
-
-      entries.push({
-        id: `${level}-${padWordNumber(startIndex + entries.length)}`,
-        vietnamese,
-        chinese,
-        pinyin,
-        phonetic: pinyin,
-        hanViet: vietnamese,
-      });
-
-      usedChinese.add(chinese);
-    }
-  }
-
-  return entries;
-};
-
 const hsk1BaseWords: VocabularyItem[] = [
   {
     id: 'HSK1-001',
@@ -1672,37 +1585,30 @@ const hsk5BaseWords: VocabularyItem[] = [
   },
 ];
 
-const buildLevelWords = (
-  level: LevelKey,
-  baseWords: VocabularyItem[],
-  targetCount: number,
-  previousChinese: Set<string>,
-) => {
+const buildLevelWords = (baseWords: VocabularyItem[], previousChinese: Set<string>) => {
   const usedChinese = new Set(previousChinese);
-  baseWords.forEach((word) => usedChinese.add(word.chinese));
+  const uniqueWords = baseWords.filter((word) => {
+    if (usedChinese.has(word.chinese)) return false;
+    usedChinese.add(word.chinese);
+    return true;
+  });
 
-  const fillersNeeded = Math.max(0, targetCount - baseWords.length);
-  const fillers =
-    fillersNeeded > 0
-      ? buildFillerEntries(level, baseWords.length + 1, fillersNeeded, usedChinese)
-      : [];
-
-  return { words: [...baseWords, ...fillers], chineseSet: usedChinese };
+  return { words: uniqueWords, chineseSet: usedChinese };
 };
 
-const hsk1Result = buildLevelWords('HSK1', hsk1BaseWords, 150, new Set());
+const hsk1Result = buildLevelWords(hsk1BaseWords, new Set());
 const hsk1Words = hsk1Result.words;
 
-const hsk2Result = buildLevelWords('HSK2', hsk2BaseWords, 350, hsk1Result.chineseSet);
+const hsk2Result = buildLevelWords(hsk2BaseWords, hsk1Result.chineseSet);
 const hsk2Words = hsk2Result.words;
 
-const hsk3Result = buildLevelWords('HSK3', hsk3BaseWords, 600, hsk2Result.chineseSet);
+const hsk3Result = buildLevelWords(hsk3BaseWords, hsk2Result.chineseSet);
 const hsk3Words = hsk3Result.words;
 
-const hsk4Result = buildLevelWords('HSK4', hsk4BaseWords, 1000, hsk3Result.chineseSet);
+const hsk4Result = buildLevelWords(hsk4BaseWords, hsk3Result.chineseSet);
 const hsk4Words = hsk4Result.words;
 
-const hsk5Result = buildLevelWords('HSK5', hsk5BaseWords, 1300, hsk4Result.chineseSet);
+const hsk5Result = buildLevelWords(hsk5BaseWords, hsk4Result.chineseSet);
 const hsk5Words = hsk5Result.words;
 
 export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
@@ -1710,35 +1616,35 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
     key: 'HSK1',
     label: 'HSK 1',
     wordCount: hsk1Words.length,
-    description: '150 mots essentiels pour démarrer.',
+    description: 'Vocabulaire local HSK1 (remplaçable par un export HSK Academy).',
     words: hsk1Words,
   },
   {
     key: 'HSK2',
     label: 'HSK 2',
     wordCount: hsk2Words.length,
-    description: '350 mots supplémentaires, sans doublon avec HSK1.',
+    description: 'Vocabulaire local HSK2 (remplaçable par un export HSK Academy).',
     words: hsk2Words,
   },
   {
     key: 'HSK3',
     label: 'HSK 3',
     wordCount: hsk3Words.length,
-    description: '600 mots supplémentaires, sans doublon avec HSK2.',
+    description: 'Vocabulaire local HSK3 (remplaçable par un export HSK Academy).',
     words: hsk3Words,
   },
   {
     key: 'HSK4',
     label: 'HSK 4',
     wordCount: hsk4Words.length,
-    description: '1000 mots supplémentaires, sans doublon avec HSK3.',
+    description: 'Vocabulaire local HSK4 (remplaçable par un export HSK Academy).',
     words: hsk4Words,
   },
   {
     key: 'HSK5',
     label: 'HSK 5',
     wordCount: hsk5Words.length,
-    description: '1300 mots supplémentaires, sans doublon avec HSK4.',
+    description: 'Vocabulaire local HSK5 (remplaçable par un export HSK Academy).',
     words: hsk5Words,
   },
 ];

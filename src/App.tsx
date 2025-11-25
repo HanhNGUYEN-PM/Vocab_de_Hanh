@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { VocabularyItem } from './types';
-import { LevelKey, VOCABULARY_BY_LEVEL, levelOrder } from './data/vocabulary';
+import { LevelKey, LevelBucket, VOCABULARY_BY_LEVEL, levelOrder } from './data/vocabulary';
+import { loadHskAcademyVocabulary } from './data/hskAcademy';
 
 const FAVORITES_STORAGE_KEY = 'chinese-vocab-favorites';
 const LEVEL_STORAGE_KEY = 'chinese-vocab-selected-level';
@@ -11,15 +12,18 @@ const LEGACY_LEVEL_MAP: Record<string, LevelKey> = {
   B2: 'HSK4',
 };
 
-const getVocabularyPool = (selectedLevel: LevelKey): VocabularyItem[] => {
+const getVocabularyPool = (levels: LevelBucket[], selectedLevel: LevelKey): VocabularyItem[] => {
   const maxIndex = levelOrder.indexOf(selectedLevel);
-  return VOCABULARY_BY_LEVEL.slice(0, maxIndex + 1)
+  return levels
+    .slice(0, maxIndex + 1)
     .flatMap((bucket) => bucket.words)
     .filter((word) => !word.isPlaceholder);
 };
 
 const App: React.FC = () => {
   const [selectedLevel, setSelectedLevel] = useState<LevelKey>('HSK1');
+  const [levels, setLevels] = useState<LevelBucket[]>(VOCABULARY_BY_LEVEL);
+  const [dataSource, setDataSource] = useState<'local' | 'hsk-academy'>('local');
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [favorites, setFavorites] = useState<VocabularyItem[]>([]);
   const [audioMessage, setAudioMessage] = useState<string | null>(null);
@@ -59,11 +63,16 @@ const App: React.FC = () => {
     localStorage.setItem(LEVEL_STORAGE_KEY, selectedLevel);
   }, [selectedLevel]);
 
-  const vocabularyPool = useMemo(() => getVocabularyPool(selectedLevel), [selectedLevel]);
-  const selectedBucket = useMemo(
-    () => VOCABULARY_BY_LEVEL.find((level) => level.key === selectedLevel),
-    [selectedLevel],
-  );
+  useEffect(() => {
+    loadHskAcademyVocabulary().then((remoteLevels) => {
+      if (!remoteLevels || remoteLevels.length === 0) return;
+      setLevels(remoteLevels);
+      setDataSource('hsk-academy');
+    });
+  }, []);
+
+  const vocabularyPool = useMemo(() => getVocabularyPool(levels, selectedLevel), [levels, selectedLevel]);
+  const selectedBucket = useMemo(() => levels.find((level) => level.key === selectedLevel), [levels, selectedLevel]);
   const selectedLevelLabel = selectedBucket?.label ?? selectedLevel;
 
   const speakWord = useCallback((word: VocabularyItem) => {
@@ -124,7 +133,7 @@ const App: React.FC = () => {
 
       <main className="container mx-auto px-4 py-8 space-y-8">
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {VOCABULARY_BY_LEVEL.map((level) => {
+          {levels.map((level) => {
             const isActive = selectedLevel === level.key;
             return (
               <button
@@ -148,10 +157,16 @@ const App: React.FC = () => {
             <div className="space-y-1">
               <p className="text-xs text-slate-500">Niveau {selectedLevelLabel}</p>
               <h2 className="text-xl font-bold text-slate-800">{vocabularyPool.length} mots à générer</h2>
-              {selectedBucket && vocabularyPool.length < selectedBucket.wordCount && (
+              {dataSource === 'hsk-academy' && selectedBucket && vocabularyPool.length < selectedBucket.wordCount && (
                 <p className="text-[13px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1 inline-flex items-center gap-2">
                   <span className="inline-block h-2 w-2 rounded-full bg-amber-400" aria-hidden />
                   Objectif {selectedBucket.wordCount} mots, {vocabularyPool.length} prêts à l'usage.
+                </p>
+              )}
+              {dataSource === 'local' && (
+                <p className="text-[13px] text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 inline-flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 rounded-full bg-slate-300" aria-hidden />
+                  Données locales affichées. Placez un export hsk.academy au chemin /hsk-academy.json pour utiliser la liste officielle.
                 </p>
               )}
             </div>
