@@ -1,8 +1,16 @@
 export type ActorType = 'actor' | 'participant';
+export type DiagramType = 'sequence' | 'flow' | 'bpmn';
 
 export interface Actor {
   name: string;
   type: ActorType;
+}
+
+export interface ProcessActivity {
+  id: string;
+  label: string;
+  type: 'action' | 'decision';
+  note?: string;
 }
 
 export interface Message {
@@ -14,6 +22,7 @@ export interface Message {
 
 export interface ProcessModel {
   actors: Actor[];
+  activities: ProcessActivity[];
   messages: Message[];
   title?: string;
 }
@@ -47,6 +56,32 @@ const sentenceToTitleCase = (text: string): string => {
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 };
 
+const sanitizeIdentifier = (value: string): string => value.replace(/[^A-Za-z0-9_]/g, '_');
+
+const classifyActivityType = (label: string): ProcessActivity['type'] => {
+  const normalized = label.toLowerCase();
+  if (/\bsi\b|\bif\b|\?/.test(normalized)) {
+    return 'decision';
+  }
+  if (/\bvalidation\b|\bcondition\b|\bchoix\b/.test(normalized)) {
+    return 'decision';
+  }
+  return 'action';
+};
+
+const splitIntoSteps = (text: string): string[] =>
+  text
+    .split(/(?:\.\s+|;|,|\bpuis\b|\bensuite\b|\bthen\b)/i)
+    .map(sentenceToTitleCase)
+    .filter(Boolean);
+
+const buildActivities = (steps: string[]): ProcessActivity[] =>
+  steps.map((step, index) => ({
+    id: `step_${index + 1}`,
+    label: trimLabel(step) || `Etape ${index + 1}`,
+    type: classifyActivityType(step),
+  }));
+
 const buildDefaultActors = (text: string): Actor[] => {
   const detected: Actor[] = [];
 
@@ -75,12 +110,7 @@ const chooseActor = (actors: Actor[], preferredName: string): Actor => {
   return found ?? actors[0];
 };
 
-const guessMessages = (text: string, actors: Actor[]): Message[] => {
-  const steps = text
-    .split(/(?:\.\s+|;|,|\bpuis\b|\bensuite\b|\bthen\b)/i)
-    .map(sentenceToTitleCase)
-    .filter(Boolean);
-
+const guessMessages = (steps: string[], actors: Actor[]): Message[] => {
   const messages: Message[] = [];
   const client = actors.find(actor => /client/i.test(actor.name)) ?? actors[0];
   const system = chooseActor(actors, 'Systeme');
@@ -120,26 +150,32 @@ const guessMessages = (text: string, actors: Actor[]): Message[] => {
 
 export const parse_natural_language_to_model = (text: string): ProcessModel => {
   const normalizedText = text.trim();
+  const steps = splitIntoSteps(normalizedText.length > 0 ? normalizedText : 'Interaction principale');
   const actors = buildDefaultActors(normalizedText);
-  const messages = guessMessages(normalizedText, actors);
+  const activities = buildActivities(steps);
+  const messages = guessMessages(steps, actors);
 
   return {
     actors,
+    activities,
     messages,
     title: sentenceToTitleCase(normalizedText.split('.')[0] ?? 'Processus'),
   };
 };
 
-export const model_to_plantuml = (model: ProcessModel): string => {
+const buildSequencePlantUML = (model: ProcessModel): string => {
   const lines: string[] = [];
   lines.push('@startuml');
   lines.push('!theme plain');
   lines.push('skinparam handwritten false');
+  lines.push('skinparam backgroundColor #FFFFFF');
+  lines.push('skinparam shadowing false');
   lines.push('skinparam sequenceMessageAlign center');
   lines.push('skinparam sequenceArrowThickness 2');
-  lines.push('skinparam ParticipantPadding 20');
-  lines.push('skinparam BoxPadding 10');
+  lines.push('skinparam ParticipantPadding 22');
+  lines.push('skinparam BoxPadding 12');
   lines.push('skinparam defaultFontName "Inter, Arial, sans-serif"');
+  lines.push('skinparam defaultFontSize 14');
   lines.push('');
 
   if (model.title) {
@@ -165,6 +201,146 @@ export const model_to_plantuml = (model: ProcessModel): string => {
   lines.push('@enduml');
   return lines.join('\n');
 };
+
+const buildFlowPlantUML = (model: ProcessModel): string => {
+  const lines: string[] = [];
+  lines.push('@startuml');
+  lines.push('!theme plain');
+  lines.push('skinparam handwritten false');
+  lines.push('skinparam shadowing false');
+  lines.push('skinparam backgroundColor #FFFFFF');
+  lines.push('skinparam defaultFontName "Inter, Arial, sans-serif"');
+  lines.push('skinparam defaultFontSize 14');
+  lines.push('skinparam activity {');
+  lines.push('  BackgroundColor #F7F9FB');
+  lines.push('  BorderColor #4B5563');
+  lines.push('  FontColor #111827');
+  lines.push('  FontSize 14');
+  lines.push('  StartColor #2563EB');
+  lines.push('  EndColor #2563EB');
+  lines.push('}');
+  lines.push('');
+
+  if (model.title) {
+    lines.push(`title ${model.title}`);
+  }
+
+  lines.push("' Flux généré depuis la description en langage naturel");
+  lines.push('start');
+
+  for (let index = 0; index < model.activities.length; index += 1) {
+    const activity = model.activities[index];
+
+    if (activity.type === 'decision') {
+      const next = model.activities[index + 1];
+      const question = activity.label.endsWith('?') ? activity.label : `${activity.label} ?`;
+      lines.push(`if (${question}) then (Oui)`);
+      if (activity.note) {
+        lines.push(`note right: ${activity.note}`);
+      }
+      if (next) {
+        lines.push(`  :${next.label};`);
+        index += 1;
+      } else {
+        lines.push('  :Continuer;');
+      }
+      lines.push('else (Non)');
+      lines.push('  :Alternative ou fin;');
+      lines.push('endif');
+      continue;
+    }
+
+    lines.push(`:${activity.label};`);
+    if (activity.note) {
+      lines.push(`note right: ${activity.note}`);
+    }
+  }
+
+  lines.push('stop');
+  lines.push('@enduml');
+  return lines.join('\n');
+};
+
+const buildBPMNPlantUML = (model: ProcessModel): string => {
+  const lines: string[] = [];
+  lines.push('@startuml');
+  lines.push('!theme plain');
+  lines.push('skinparam handwritten false');
+  lines.push('skinparam shadowing false');
+  lines.push('skinparam backgroundColor #FFFFFF');
+  lines.push('skinparam defaultFontName "Inter, Arial, sans-serif"');
+  lines.push('skinparam defaultFontSize 14');
+  lines.push('skinparam rectangle {');
+  lines.push('  RoundCorner 12');
+  lines.push('  BackgroundColor #F7F9FB');
+  lines.push('  BorderColor #1F2937');
+  lines.push('  FontColor #0F172A');
+  lines.push('}');
+  lines.push('left to right direction');
+  lines.push('');
+
+  if (model.title) {
+    lines.push(`title ${model.title} (BPMN simplifié)`);
+  }
+
+  if (model.actors.length) {
+    lines.push("' Acteurs / Pools détectés");
+    for (const actor of model.actors) {
+      lines.push(`participant "${actor.name}" as ${sanitizeIdentifier(actor.name)}`);
+    }
+    lines.push('');
+  }
+
+  lines.push('partition "Processus" {');
+  lines.push('  start');
+
+  for (let index = 0; index < model.activities.length; index += 1) {
+    const activity = model.activities[index];
+    if (activity.type === 'decision') {
+      const next = model.activities[index + 1];
+      const question = activity.label.endsWith('?') ? activity.label : `${activity.label} ?`;
+      lines.push(`  if (${question}) then (Oui)`);
+      if (activity.note) {
+        lines.push(`  note right: ${activity.note}`);
+      }
+      if (next) {
+        lines.push(`    :${next.label};`);
+        index += 1;
+      } else {
+        lines.push('    :Continuer;');
+      }
+      lines.push('  else (Non)');
+      lines.push('    :Alternative ou fin;');
+      lines.push('  endif');
+      continue;
+    }
+
+    lines.push(`  :${activity.label};`);
+    if (activity.note) {
+      lines.push(`  note right: ${activity.note}`);
+    }
+  }
+
+  lines.push('  stop');
+  lines.push('}');
+  lines.push('@enduml');
+  return lines.join('\n');
+};
+
+export const model_to_plantuml = (model: ProcessModel, diagram_type: DiagramType = 'sequence'): string => {
+  switch (diagram_type) {
+    case 'flow':
+      return buildFlowPlantUML(model);
+    case 'bpmn':
+      return buildBPMNPlantUML(model);
+    case 'sequence':
+    default:
+      return buildSequencePlantUML(model);
+  }
+};
+
+export const switch_diagram_type = (model: ProcessModel, new_diagram_type: DiagramType): string =>
+  model_to_plantuml(model, new_diagram_type);
 
 const encode6bit = (b: number): string => {
   if (b < 10) return String.fromCharCode(48 + b);
