@@ -61,6 +61,7 @@ const VocabularyInput: React.FC<VocabularyInputProps> = ({ onSave, existingVocab
         pinyin,
         phonetic,
         hanViet,
+        difficulty: 'HSK1',
       });
     });
 
