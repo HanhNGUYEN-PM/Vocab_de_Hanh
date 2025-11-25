@@ -69,7 +69,8 @@ const App: React.FC = () => {
         return;
       }
 
-      if (item.audioUrl && typeof Audio !== 'undefined') {
+      const hasAudioTag = typeof Audio !== 'undefined';
+      if (item.audioUrl && hasAudioTag) {
         const audio = new Audio(item.audioUrl);
         void audio.play().catch((err) => {
           console.error('Lecture audio impossible :', err);
@@ -77,14 +78,22 @@ const App: React.FC = () => {
         return;
       }
 
-      const supportsSpeech =
-        typeof window.speechSynthesis !== 'undefined' && typeof window.SpeechSynthesisUtterance !== 'undefined';
+      const speechSynth = typeof window.speechSynthesis !== 'undefined' ? window.speechSynthesis : null;
+      const Utterance = typeof window.SpeechSynthesisUtterance !== 'undefined' ? window.SpeechSynthesisUtterance : null;
 
-      if (supportsSpeech) {
-        const utterance = new SpeechSynthesisUtterance(item.chinese || item.pinyin);
+      const canSpeak =
+        speechSynth &&
+        typeof speechSynth.speak === 'function' &&
+        typeof speechSynth.cancel === 'function' &&
+        Utterance;
+
+      if (canSpeak) {
+        const text = item.chinese || item.pinyin || item.vietnamese;
+        if (!text) return;
+        const utterance = new Utterance(text);
         utterance.lang = 'zh-CN';
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
+        speechSynth.cancel();
+        speechSynth.speak(utterance);
       }
     } catch (error) {
       console.error('Échec de la lecture audio :', error);
@@ -92,8 +101,12 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    if (currentWord) {
+    if (!currentWord) return;
+
+    try {
       handlePlayAudio(currentWord);
+    } catch (error) {
+      console.error('Lecture auto échouée :', error);
     }
   }, [currentWord]);
 
