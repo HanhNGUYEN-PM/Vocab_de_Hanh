@@ -13,7 +13,9 @@ const LEGACY_LEVEL_MAP: Record<string, LevelKey> = {
 
 const getVocabularyPool = (selectedLevel: LevelKey): VocabularyItem[] => {
   const maxIndex = levelOrder.indexOf(selectedLevel);
-  return VOCABULARY_BY_LEVEL.slice(0, maxIndex + 1).flatMap((bucket) => bucket.words);
+  return VOCABULARY_BY_LEVEL.slice(0, maxIndex + 1)
+    .flatMap((bucket) => bucket.words)
+    .filter((word) => !word.isPlaceholder);
 };
 
 const App: React.FC = () => {
@@ -30,7 +32,8 @@ const App: React.FC = () => {
       if (storedFavorites) {
         const parsedFavorites = JSON.parse(storedFavorites) as VocabularyItem[];
         if (Array.isArray(parsedFavorites)) {
-          setFavorites(parsedFavorites);
+          const cleanedFavorites = parsedFavorites.filter((item) => !item.isPlaceholder);
+          setFavorites(cleanedFavorites);
         }
       }
 
@@ -57,10 +60,11 @@ const App: React.FC = () => {
   }, [selectedLevel]);
 
   const vocabularyPool = useMemo(() => getVocabularyPool(selectedLevel), [selectedLevel]);
-  const selectedLevelLabel = useMemo(
-    () => VOCABULARY_BY_LEVEL.find((level) => level.key === selectedLevel)?.label ?? selectedLevel,
+  const selectedBucket = useMemo(
+    () => VOCABULARY_BY_LEVEL.find((level) => level.key === selectedLevel),
     [selectedLevel],
   );
+  const selectedLevelLabel = selectedBucket?.label ?? selectedLevel;
 
   const speakWord = useCallback((word: VocabularyItem) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -143,7 +147,13 @@ const App: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div className="space-y-1">
               <p className="text-xs text-slate-500">Niveau {selectedLevelLabel}</p>
-              <h2 className="text-xl font-bold text-slate-800">{vocabularyPool.length} mots disponibles</h2>
+              <h2 className="text-xl font-bold text-slate-800">{vocabularyPool.length} mots à générer</h2>
+              {selectedBucket && vocabularyPool.length < selectedBucket.wordCount && (
+                <p className="text-[13px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1 inline-flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 rounded-full bg-amber-400" aria-hidden />
+                  Objectif {selectedBucket.wordCount} mots, {vocabularyPool.length} prêts à l'usage.
+                </p>
+              )}
             </div>
             <div className="flex gap-2">
               <button

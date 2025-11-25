@@ -34,6 +34,7 @@ const makePlaceholders = (
       pinyin: `${pinyinPrefix}${wordNumber}`,
       phonetic: `${phoneticPrefix} ${wordNumber}`,
       hanViet: `${hanVietPrefix} ${wordNumber}`,
+      isPlaceholder: true,
     };
   });
 };
