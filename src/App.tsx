@@ -85,13 +85,13 @@ const App: React.FC = () => {
     speakWord(nextWord);
   };
 
-  const handleToggleFavorite = () => {
+  const handleAddFavorite = () => {
     if (!currentWord) return;
 
     setFavorites((prev) => {
       const exists = prev.some((item) => item.id === currentWord.id);
       if (exists) {
-        return prev.filter((item) => item.id !== currentWord.id);
+        return prev;
       }
       return [...prev, currentWord];
     });
@@ -179,21 +179,17 @@ const App: React.FC = () => {
                 <p className="text-base text-slate-600">Hán Việt : <span className="font-semibold">{currentWord.hanViet}</span></p>
               </div>
 
-              <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col justify-between gap-3">
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-slate-500">Actions</p>
-                  <p className="text-lg font-bold text-slate-800">Audio + favoris</p>
-                  <p className="text-xs text-slate-600">Lecture automatique, sauvegarde rapide.</p>
-                </div>
+              <div className="p-5 rounded-xl border border-slate-200 bg-white shadow-sm flex flex-col gap-3">
                 <button
-                  onClick={handleToggleFavorite}
-                  className={`inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold transition-colors ${
+                  onClick={handleAddFavorite}
+                  disabled={isCurrentFavorite}
+                  className={`inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-colors ${
                     isCurrentFavorite
-                      ? 'bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200'
+                      ? 'bg-amber-100 text-amber-800 border border-amber-200 cursor-default'
                       : 'bg-indigo-600 text-white shadow hover:bg-indigo-700'
                   }`}
                 >
-                  {isCurrentFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                  {isCurrentFavorite ? 'Déjà dans les favoris' : 'Ajouter aux favoris'}
                 </button>
               </div>
             </div>
