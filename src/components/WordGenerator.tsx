@@ -11,7 +11,16 @@ interface WordGeneratorProps {
   onPlayAudio: (item: VocabularyItem) => void;
 }
 
-const levels: DifficultyLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+const levels: { value: DifficultyLevel; label: string; description: string }[] = [
+  { value: 'HSK1', label: 'HSK 1', description: '150 mots fondamentaux' },
+  { value: 'HSK2', label: 'HSK 2', description: '+350 mots supplémentaires' },
+  { value: 'HSK3', label: 'HSK 3', description: '+600 mots supplémentaires' },
+  { value: 'HSK4', label: 'HSK 4', description: '+1 000 mots supplémentaires' },
+  { value: 'HSK5', label: 'HSK 5', description: '+1 300 mots supplémentaires' },
+];
+
+const formatLevelLabel = (level: DifficultyLevel) =>
+  levels.find((item) => item.value === level)?.label ?? level;
 
 const WordGenerator: React.FC<WordGeneratorProps> = ({
   selectedLevel,
@@ -26,9 +35,12 @@ const WordGenerator: React.FC<WordGeneratorProps> = ({
     <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <p className="text-sm uppercase tracking-wide text-indigo-500 font-semibold">Progression CECRL</p>
+          <p className="text-sm uppercase tracking-wide text-indigo-500 font-semibold">Progression HSK</p>
           <h2 className="text-2xl font-bold text-slate-800">Choisissez un niveau puis générez un mot</h2>
-          <p className="text-slate-600 mt-2">Chaque mot inclut l'écriture chinoise, le pinyin, la phonétique vietnamienne et une prononciation audio.</p>
+          <p className="text-slate-600 mt-2">
+            Chaque mot inclut l'écriture chinoise, le pinyin, la phonétique vietnamienne et une prononciation audio.
+            Les niveaux suivent la progression HSK officielle.
+          </p>
         </div>
         <button
           onClick={onGenerate}
@@ -41,15 +53,24 @@ const WordGenerator: React.FC<WordGeneratorProps> = ({
       <div className="flex flex-wrap gap-3 mb-6">
         {levels.map((level) => (
           <button
-            key={level}
-            onClick={() => onSelectLevel(level)}
+            key={level.value}
+            onClick={() => onSelectLevel(level.value)}
             className={`px-4 py-2 rounded-full text-sm font-semibold border transition ${
-              selectedLevel === level
+              selectedLevel === level.value
                 ? 'bg-indigo-600 text-white border-indigo-600 shadow'
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
             }`}
           >
-            {level}
+            <div className="flex flex-col text-left leading-tight">
+              <span>{level.label}</span>
+              <span
+                className={`text-[11px] font-normal sm:text-xs md:text-[11px] ${
+                  selectedLevel === level.value ? 'text-indigo-50/90' : 'text-slate-500'
+                }`}
+              >
+                {level.description}
+              </span>
+            </div>
           </button>
         ))}
       </div>
@@ -58,7 +79,7 @@ const WordGenerator: React.FC<WordGeneratorProps> = ({
         <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-5">
           <div className="flex justify-between items-start gap-4 flex-wrap">
             <div>
-              <p className="text-sm font-semibold text-indigo-600">{currentWord.difficulty}</p>
+              <p className="text-sm font-semibold text-indigo-600">{formatLevelLabel(currentWord.difficulty)}</p>
               <h3 className="text-3xl font-bold text-slate-900 mb-1">{currentWord.vietnamese}</h3>
               <p className="text-lg text-slate-700 mb-2">{currentWord.chinese}</p>
               <p className="text-slate-600">Pinyin : <span className="font-semibold">{currentWord.pinyin}</span></p>
@@ -88,7 +109,7 @@ const WordGenerator: React.FC<WordGeneratorProps> = ({
         </div>
       ) : (
         <div className="border border-dashed border-slate-300 rounded-lg p-6 text-center text-slate-500">
-          Appuyez sur « Générer » pour découvrir un nouveau mot de niveau {selectedLevel}.
+          Appuyez sur « Générer » pour découvrir un nouveau mot de niveau {formatLevelLabel(selectedLevel)}.
         </div>
       )}
     </div>

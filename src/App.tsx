@@ -7,7 +7,7 @@ import { DifficultyLevel, VocabularyItem } from './types';
 const FAVORITES_STORAGE_KEY = 'chinese-learning-favorites';
 
 const App: React.FC = () => {
-  const [selectedLevel, setSelectedLevel] = useState<DifficultyLevel>('A1');
+  const [selectedLevel, setSelectedLevel] = useState<DifficultyLevel>('HSK1');
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [favorites, setFavorites] = useState<VocabularyItem[]>([]);
 
@@ -80,7 +80,7 @@ const App: React.FC = () => {
       <header className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-6 flex items-center justify-between">
           <p className="text-sm font-semibold text-indigo-600">Outil d'apprentissage du chinois</p>
-          <span className="text-xs text-slate-500">Niveaux A1 → C2</span>
+          <span className="text-xs text-slate-500">Niveaux HSK 1 → 5</span>
         </div>
       </header>
 

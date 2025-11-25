@@ -8,7 +8,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'nǐ hǎo',
     phonetic: 'nỉ hảo',
     hanViet: 'nhĩ hảo',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-2',
@@ -17,7 +17,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'xièxie',
     phonetic: 'xiê xiê',
     hanViet: 'tạ tạ',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-3',
@@ -26,7 +26,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'zàijiàn',
     phonetic: 'chai chiên',
     hanViet: 'tái kiến',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-4',
@@ -35,7 +35,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'duìbuqǐ',
     phonetic: 'tuây bộ chỉ',
     hanViet: 'đối bất khởi',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-5',
@@ -44,7 +44,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'shì de',
     phonetic: 'sư tờ',
     hanViet: 'thị đích',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-6',
@@ -53,7 +53,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'bú shì',
     phonetic: 'bú sư',
     hanViet: 'bất thị',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-7',
@@ -62,7 +62,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'nǐ hǎo ma?',
     phonetic: 'nỉ hảo ma',
     hanViet: 'nhĩ hảo ma',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-8',
@@ -71,7 +71,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'wǒ hěn hǎo',
     phonetic: 'ủa hẩn hảo',
     hanViet: 'ngã ngận hảo',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-9',
@@ -80,7 +80,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'wǒ jiào...',
     phonetic: 'ủa chiao',
     hanViet: 'ngã khiếu',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-10',
@@ -89,7 +89,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'hěn gāoxìng rènshi nǐ',
     phonetic: 'hẩn cao xinh rân sư nỉ',
     hanViet: 'ngận cao hứng nhận thức nhĩ',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-11',
@@ -98,7 +98,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'cèsuǒ zài nǎlǐ?',
     phonetic: 'xưa sủa chai nả lỉ',
     hanViet: 'xí sở tại nãi lí',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a1-12',
@@ -107,7 +107,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'duōshao qián?',
     phonetic: 'tuô sao chiền',
     hanViet: 'đa thiểu tiền',
-    difficulty: 'A1',
+    difficulty: 'HSK1',
   },
   {
     id: 'a2-1',
@@ -116,7 +116,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'yīyuàn',
     phonetic: 'y chiu-en',
     hanViet: 'y viện',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-2',
@@ -125,7 +125,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'túshūguǎn',
     phonetic: 'tú su quẳn',
     hanViet: 'đồ thư quán',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-3',
@@ -134,7 +134,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'zǎocān',
     phonetic: 'chảo than',
     hanViet: 'tảo xan',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-4',
@@ -143,7 +143,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'gòuwù',
     phonetic: 'câu u',
     hanViet: 'cấu vật',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-5',
@@ -152,7 +152,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'diǎn cài',
     phonetic: 'điển xai',
     hanViet: 'điểm thái',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-6',
@@ -161,7 +161,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'zuò dìtiě',
     phonetic: 'chuô đi thiể',
     hanViet: 'tọa địa thiết',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-7',
@@ -170,7 +170,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'nǐ zhù zài nǎr?',
     phonetic: 'nỉ trụ chai nả nhi',
     hanViet: 'nhĩ trú tại ná nhi',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-8',
@@ -179,7 +179,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'wǒ xiǎng dìng fáng',
     phonetic: 'ủa xẻng đinh pháng',
     hanViet: 'ngã tưởng đính phòng',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-9',
@@ -188,7 +188,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'kěyǐ piányi yìdiǎn ma?',
     phonetic: 'khứa ỷ piền y dì điển ma',
     hanViet: 'khả dĩ tiện nghi nhất điểm ma',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-10',
@@ -197,7 +197,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'chūfā shíjiān',
     phonetic: 'tru pha sử chiên',
     hanViet: 'xuất phát thời gian',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-11',
@@ -206,7 +206,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'nǐ néng bāng wǒ ma?',
     phonetic: 'nỉ nầng bang ủa ma',
     hanViet: 'nhĩ năng bang ngã ma',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'a2-12',
@@ -215,7 +215,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'wǒ guòmǐn',
     phonetic: 'ủa cuô mỉn',
     hanViet: 'ngã quá mẫn',
-    difficulty: 'A2',
+    difficulty: 'HSK2',
   },
   {
     id: 'b1-1',
@@ -224,7 +224,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'tǐyàn',
     phonetic: 'thỉ yẹn',
     hanViet: 'thể nghiệm',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-2',
@@ -233,7 +233,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'tiǎozhàn',
     phonetic: 'thẻo chạn',
     hanViet: 'thiêu chiến',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-3',
@@ -242,7 +242,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'qīxiàn',
     phonetic: 'chi xiẹn',
     hanViet: 'kỳ hạn',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-4',
@@ -251,7 +251,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'yǐngxiǎng',
     phonetic: 'dỉnh xẻng',
     hanViet: 'ảnh hưởng',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-5',
@@ -260,7 +260,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'yùyuē',
     phonetic: 'yu yuê',
     hanViet: 'dự ước',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-6',
@@ -269,7 +269,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'miànshì',
     phonetic: 'miện sư',
     hanViet: 'diện thí',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-7',
@@ -278,7 +278,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'jiāoliú',
     phonetic: 'chao liú',
     hanViet: 'giao lưu',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-8',
@@ -287,7 +287,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'jiànyì',
     phonetic: 'chen yi',
     hanViet: 'kiến nghị',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-9',
@@ -296,7 +296,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'jiěshì',
     phonetic: 'chẻ sư',
     hanViet: 'giải thích',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-10',
@@ -305,7 +305,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'zìxìn',
     phonetic: 'dự xin',
     hanViet: 'tự tín',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-11',
@@ -314,7 +314,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'jiāohuàn yìjiàn',
     phonetic: 'chao hoan yi chiẹn',
     hanViet: 'giao hoán ý kiến',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b1-12',
@@ -323,7 +323,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'shuōfú',
     phonetic: 'suô phú',
     hanViet: 'thuyết phục',
-    difficulty: 'B1',
+    difficulty: 'HSK3',
   },
   {
     id: 'b2-1',
@@ -332,7 +332,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'tánpàn',
     phonetic: 'thán pan',
     hanViet: 'đàm phán',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-2',
@@ -341,7 +341,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'zhànlüè',
     phonetic: 'chan lüê',
     hanViet: 'chiến lược',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-3',
@@ -350,7 +350,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'pínghéng',
     phonetic: 'bình hằng',
     hanViet: 'bình hành',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-4',
@@ -359,7 +359,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'shùjù',
     phonetic: 'su chự',
     hanViet: 'số cứ',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-5',
@@ -368,7 +368,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'guǎnlǐ xiàngmù',
     phonetic: 'quản lỉ xiang mu',
     hanViet: 'quản lý hạng mục',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-6',
@@ -377,7 +377,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'fǎnkuì',
     phonetic: 'phản khuây',
     hanViet: 'phản khứu',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-7',
@@ -386,7 +386,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'tiáozhěng',
     phonetic: 'thẻo chẩng',
     hanViet: 'điều chỉnh',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-8',
@@ -395,7 +395,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'yōuxiān',
     phonetic: 'yôu xien',
     hanViet: 'ưu tiên',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-9',
@@ -404,7 +404,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'hézuò',
     phonetic: 'hứa chuô',
     hanViet: 'hợp tác',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-10',
@@ -413,7 +413,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'jiějué wèntí',
     phonetic: 'chẻ chuê uân thí',
     hanViet: 'giải quyết vấn đề',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-11',
@@ -422,7 +422,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'bǐjiào xuǎnzé',
     phonetic: 'bí chiao xuản trấc',
     hanViet: 'bỉ giáo tuyển trạch',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'b2-12',
@@ -431,7 +431,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'fābiǎo yìjiàn',
     phonetic: 'pha bẻo yi chiẹn',
     hanViet: 'phát biểu ý kiến',
-    difficulty: 'B2',
+    difficulty: 'HSK4',
   },
   {
     id: 'c1-1',
@@ -440,7 +440,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'kě chíxù',
     phonetic: 'khứa chứa hự',
     hanViet: 'khả trì tục',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-2',
@@ -449,7 +449,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'chuàngxīn',
     phonetic: 'trắng xin',
     hanViet: 'sáng tân',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-3',
@@ -458,7 +458,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'tòumíng',
     phonetic: 'thâu mính',
     hanViet: 'thấu minh',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-4',
@@ -467,7 +467,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'zìzhǔ',
     phonetic: 'dự chủ',
     hanViet: 'tự chủ',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-5',
@@ -476,7 +476,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'shēnrù tǎolùn',
     phonetic: 'sân ru thao luân',
     hanViet: 'thâm nhập thảo luận',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-6',
@@ -485,7 +485,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'shèhuì zérèn',
     phonetic: 'sơ huây trớ rân',
     hanViet: 'xã hội trách nhiệm',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-7',
@@ -494,7 +494,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'luójí yánmì',
     phonetic: 'luô chí yèn mi',
     hanViet: 'la đề nghiêm mật',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-8',
@@ -503,7 +503,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'yōuhuà',
     phonetic: 'yôu hoa',
     hanViet: 'ưu hóa',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-9',
@@ -512,7 +512,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'chángyuǎn shìyě',
     phonetic: 'cháng yuển sư dẻ',
     hanViet: 'trường viễn thị dã',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-10',
@@ -521,7 +521,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'xiétiáo zīyuán',
     phonetic: 'xiê thìao tư duền',
     hanViet: 'hiệp điều tư nguyên',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-11',
@@ -530,7 +530,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'jiějué chōngtū',
     phonetic: 'chẻ chuê chong thu',
     hanViet: 'giải quyết xung đột',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c1-12',
@@ -539,7 +539,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'chénshù bìng shuōfú',
     phonetic: 'chân su bîng suô phú',
     hanViet: 'trần thuật tịnh thuyết phục',
-    difficulty: 'C1',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-1',
@@ -548,7 +548,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'pīpànxìng',
     phonetic: 'phi phan xịnh',
     hanViet: 'phê phán tính',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-2',
@@ -557,7 +557,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'héxié',
     phonetic: 'hứa xề',
     hanViet: 'hòa hiệp',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-3',
@@ -566,7 +566,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'guānjiàn',
     phonetic: 'qua chen',
     hanViet: 'quan kiện',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-4',
@@ -575,7 +575,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'jīngzhì',
     phonetic: 'ching trư',
     hanViet: 'tinh trí',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-5',
@@ -584,7 +584,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'gāocéng tánpàn',
     phonetic: 'cao sầng thán pan',
     hanViet: 'cao tầng đàm phán',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-6',
@@ -593,7 +593,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'fǎlǜ kuàngjià',
     phonetic: 'fả lự khoang cha',
     hanViet: 'pháp luật khuôn giá',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-7',
@@ -602,7 +602,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'zhuānyè duìhuà',
     phonetic: 'chua nhiê đội hoa',
     hanViet: 'chuyên nghiệp đối thoại',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-8',
@@ -611,7 +611,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'hétóng tiáokuǎn',
     phonetic: 'hơ thúng thẻo khoản',
     hanViet: 'hợp đồng điều khoản',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-9',
@@ -620,7 +620,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'lùnzhèng xīlì',
     phonetic: 'luân trâng xi li',
     hanViet: 'luận chứng tê lệ',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-10',
@@ -629,7 +629,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'wàijiāo wòxuán',
     phonetic: 'oai chao uô xuyên',
     hanViet: 'ngoại giao ốt toàn',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-11',
@@ -638,7 +638,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'jiějué wēijī',
     phonetic: 'chẻ chuê uây chi',
     hanViet: 'giải quyết nguy cơ',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
   {
     id: 'c2-12',
@@ -647,7 +647,7 @@ export const vocabularyPool: VocabularyItem[] = [
     pinyin: 'fǎnsī nénglì',
     phonetic: 'phản sư nầng li',
     hanViet: 'phản tư năng lực',
-    difficulty: 'C2',
+    difficulty: 'HSK5',
   },
 ];
 

@@ -1,4 +1,4 @@
-export type DifficultyLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+export type DifficultyLevel = 'HSK1' | 'HSK2' | 'HSK3' | 'HSK4' | 'HSK5';
 
 export interface VocabularyItem {
   id: string;
@@ -7,6 +7,6 @@ export interface VocabularyItem {
   pinyin: string;
   phonetic: string;
   hanViet: string;
-  difficulty?: DifficultyLevel;
+  difficulty: DifficultyLevel;
   audioUrl?: string;
 }
