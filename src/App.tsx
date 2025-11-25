@@ -60,16 +60,21 @@ const App: React.FC = () => {
   };
 
   const handlePlayAudio = (item: VocabularyItem) => {
-    if (item.audioUrl) {
-      const audio = new Audio(item.audioUrl);
-      audio.play();
-      return;
-    }
+    try {
+      if (item.audioUrl) {
+        const audio = new Audio(item.audioUrl);
+        void audio.play();
+        return;
+      }
 
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(item.chinese || item.pinyin);
-      utterance.lang = 'zh-CN';
-      speechSynthesis.speak(utterance);
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(item.chinese || item.pinyin);
+        utterance.lang = 'zh-CN';
+        speechSynthesis.cancel();
+        speechSynthesis.speak(utterance);
+      }
+    } catch (error) {
+      console.error('Échec de la lecture audio :', error);
     }
   };
 

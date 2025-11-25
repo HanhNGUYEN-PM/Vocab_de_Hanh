@@ -11,12 +11,12 @@ interface WordGeneratorProps {
   onPlayAudio: (item: VocabularyItem) => void;
 }
 
-const levels: { value: DifficultyLevel; label: string; description: string }[] = [
-  { value: 'HSK1', label: 'HSK 1', description: '150 mots fondamentaux' },
-  { value: 'HSK2', label: 'HSK 2', description: '+350 mots supplémentaires' },
-  { value: 'HSK3', label: 'HSK 3', description: '+600 mots supplémentaires' },
-  { value: 'HSK4', label: 'HSK 4', description: '+1 000 mots supplémentaires' },
-  { value: 'HSK5', label: 'HSK 5', description: '+1 300 mots supplémentaires' },
+const levels: { value: DifficultyLevel; label: string }[] = [
+  { value: 'HSK1', label: 'HSK1' },
+  { value: 'HSK2', label: 'HSK2' },
+  { value: 'HSK3', label: 'HSK3' },
+  { value: 'HSK4', label: 'HSK4' },
+  { value: 'HSK5', label: 'HSK5' },
 ];
 
 const formatLevelLabel = (level: DifficultyLevel) =>
@@ -35,12 +35,8 @@ const WordGenerator: React.FC<WordGeneratorProps> = ({
     <div className="bg-white rounded-xl shadow-lg p-6 md:p-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <p className="text-sm uppercase tracking-wide text-indigo-500 font-semibold">Progression HSK</p>
-          <h2 className="text-2xl font-bold text-slate-800">Choisissez un niveau puis générez un mot</h2>
-          <p className="text-slate-600 mt-2">
-            Chaque mot inclut l'écriture chinoise, le pinyin, la phonétique vietnamienne et une prononciation audio.
-            Les niveaux suivent la progression HSK officielle.
-          </p>
+          <h2 className="text-2xl font-bold text-slate-800">Générez un mot HSK</h2>
+          <p className="text-slate-600 mt-1">Choisissez un niveau puis appuyez sur « Générer ».</p>
         </div>
         <button
           onClick={onGenerate}
@@ -61,16 +57,7 @@ const WordGenerator: React.FC<WordGeneratorProps> = ({
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
             }`}
           >
-            <div className="flex flex-col text-left leading-tight">
-              <span>{level.label}</span>
-              <span
-                className={`text-[11px] font-normal sm:text-xs md:text-[11px] ${
-                  selectedLevel === level.value ? 'text-indigo-50/90' : 'text-slate-500'
-                }`}
-              >
-                {level.description}
-              </span>
-            </div>
+            {level.label}
           </button>
         ))}
       </div>
