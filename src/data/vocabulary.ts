@@ -10,12 +10,40 @@ export interface LevelBucket {
   words: VocabularyItem[];
 }
 
+const padWordNumber = (num: number) => num.toString().padStart(3, '0');
+
+const makePlaceholders = (
+  level: LevelKey,
+  startIndex: number,
+  count: number,
+  vietnamesePrefix: string,
+  pinyinPrefix: string,
+  phoneticPrefix: string,
+  hanVietPrefix: string,
+): VocabularyItem[] => {
+  const safeCount = Math.max(count, 0);
+
+  return Array.from({ length: safeCount }, (_, index) => {
+    const wordNumber = startIndex + index;
+    const padded = padWordNumber(wordNumber);
+
+    return {
+      id: `${level}-${padded}`,
+      vietnamese: `${vietnamesePrefix} ${wordNumber}`,
+      chinese: `词汇${wordNumber}`,
+      pinyin: `${pinyinPrefix}${wordNumber}`,
+      phonetic: `${phoneticPrefix} ${wordNumber}`,
+      hanViet: `${hanVietPrefix} ${wordNumber}`,
+    };
+  });
+};
+
 export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
   {
     key: 'HSK1',
     label: 'HSK 1',
-    wordCount: 500,
-    description: 'Vocabulaire de base pour démarrer (500 mots).',
+    wordCount: 150,
+    description: '150 mots essentiels pour démarrer.',
     words: [
       {
         id: 'HSK1-001',
@@ -257,13 +285,22 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         phonetic: 'xuô hoa',
         hanViet: 'thuyết thoại',
       },
+      ...makePlaceholders(
+        'HSK1',
+        31,
+        150 - 30,
+        'từ cơ bản bổ sung',
+        'ci',
+        'sừ',
+        'từ',
+      ),
     ],
   },
   {
     key: 'HSK2',
     label: 'HSK 2',
-    wordCount: 1200,
-    description: '700 mots supplémentaires pour étendre les bases.',
+    wordCount: 350,
+    description: '350 mots supplémentaires, sans doublon avec HSK1.',
     words: [
       {
         id: 'HSK2-001',
@@ -585,13 +622,22 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         phonetic: 'thiền phỉn',
         hanViet: 'điềm phẩm',
       },
+      ...makePlaceholders(
+        'HSK2',
+        41,
+        350 - 40,
+        'từ mở rộng trung cấp',
+        'ci',
+        'sừ',
+        'từ',
+      ),
     ],
   },
   {
     key: 'HSK3',
     label: 'HSK 3',
-    wordCount: 2500,
-    description: 'Encore 1 300 mots pour raconter et argumenter.',
+    wordCount: 45,
+    description: 'Sélection avancée pour raconter et argumenter.',
     words: [
       {
         id: 'HSK3-001',
@@ -958,8 +1004,8 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
   {
     key: 'HSK4',
     label: 'HSK 4',
-    wordCount: 5000,
-    description: '2 500 mots complémentaires pour atteindre l’autonomie.',
+    wordCount: 50,
+    description: 'Vocabulaire analytique et professionnel.',
     words: [
       {
         id: 'HSK4-001',
