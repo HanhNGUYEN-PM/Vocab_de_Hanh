@@ -111,22 +111,18 @@ const App: React.FC = () => {
               <button
                 key={level.key}
                 onClick={() => setSelectedLevel(level.key)}
-                className={`text-left rounded-2xl border transition-all duration-200 p-5 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                className={`rounded-2xl border transition-all duration-200 px-5 py-6 shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                   isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white border-slate-200 text-slate-800'
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-lg font-bold">{level.label}</span>
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                    isActive ? 'bg-white/20 text-white' : 'bg-indigo-50 text-indigo-700'
-                  }`}>
-                    {level.wordCount.toLocaleString('fr-FR')} mots
-                  </span>
+                  {isActive && (
+                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-white/20 text-white">
+                      Actif
+                    </span>
+                  )}
                 </div>
-                <p className={`mt-3 text-sm ${isActive ? 'text-indigo-100' : 'text-slate-600'}`}>{level.description}</p>
-                {isActive && (
-                  <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-indigo-100">Niveau sélectionné</p>
-                )}
               </button>
             );
           })}
