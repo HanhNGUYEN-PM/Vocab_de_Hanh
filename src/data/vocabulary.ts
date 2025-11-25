@@ -1,6 +1,6 @@
 import { VocabularyItem } from '../types';
 
-export type LevelKey = 'A1' | 'A2' | 'B1' | 'B2';
+export type LevelKey = 'HSK1' | 'HSK2' | 'HSK3' | 'HSK4';
 
 export interface LevelBucket {
   key: LevelKey;
@@ -12,13 +12,13 @@ export interface LevelBucket {
 
 export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
   {
-    key: 'A1',
-    label: 'A1',
+    key: 'HSK1',
+    label: 'HSK 1',
     wordCount: 500,
     description: 'Vocabulaire de base pour démarrer (500 mots).',
     words: [
       {
-        id: 'A1-001',
+        id: 'HSK1-001',
         vietnamese: 'xin chào',
         chinese: '你好',
         pinyin: 'nǐ hǎo',
@@ -26,7 +26,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'nhĩ hảo',
       },
       {
-        id: 'A1-002',
+        id: 'HSK1-002',
         vietnamese: 'cảm ơn',
         chinese: '谢谢',
         pinyin: 'xièxie',
@@ -34,7 +34,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'tạ tạ',
       },
       {
-        id: 'A1-003',
+        id: 'HSK1-003',
         vietnamese: 'tạm biệt',
         chinese: '再见',
         pinyin: 'zàijiàn',
@@ -42,7 +42,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'tái kiến',
       },
       {
-        id: 'A1-004',
+        id: 'HSK1-004',
         vietnamese: 'ngân hàng',
         chinese: '银行',
         pinyin: 'yínháng',
@@ -50,7 +50,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'ngân hàng',
       },
       {
-        id: 'A1-005',
+        id: 'HSK1-005',
         vietnamese: 'bưu điện',
         chinese: '邮局',
         pinyin: 'yóujú',
@@ -60,13 +60,13 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
     ],
   },
   {
-    key: 'A2',
-    label: 'A2',
+    key: 'HSK2',
+    label: 'HSK 2',
     wordCount: 1200,
     description: '700 mots supplémentaires pour étendre les bases.',
     words: [
       {
-        id: 'A2-001',
+        id: 'HSK2-001',
         vietnamese: 'sân bay',
         chinese: '机场',
         pinyin: 'jīchǎng',
@@ -74,7 +74,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'cơ trường',
       },
       {
-        id: 'A2-002',
+        id: 'HSK2-002',
         vietnamese: 'bệnh viện',
         chinese: '医院',
         pinyin: 'yīyuàn',
@@ -82,7 +82,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'y viện',
       },
       {
-        id: 'A2-003',
+        id: 'HSK2-003',
         vietnamese: 'món ăn',
         chinese: '菜',
         pinyin: 'cài',
@@ -90,7 +90,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'thái',
       },
       {
-        id: 'A2-004',
+        id: 'HSK2-004',
         vietnamese: 'đặt chỗ',
         chinese: '预订',
         pinyin: 'yùdìng',
@@ -98,7 +98,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'dự đính',
       },
       {
-        id: 'A2-005',
+        id: 'HSK2-005',
         vietnamese: 'vui vẻ',
         chinese: '开心',
         pinyin: 'kāixīn',
@@ -108,13 +108,13 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
     ],
   },
   {
-    key: 'B1',
-    label: 'B1',
+    key: 'HSK3',
+    label: 'HSK 3',
     wordCount: 2500,
     description: 'Encore 1 300 mots pour raconter et argumenter.',
     words: [
       {
-        id: 'B1-001',
+        id: 'HSK3-001',
         vietnamese: 'trách nhiệm',
         chinese: '责任',
         pinyin: 'zérèn',
@@ -122,7 +122,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'trách nhiệm',
       },
       {
-        id: 'B1-002',
+        id: 'HSK3-002',
         vietnamese: 'kinh nghiệm',
         chinese: '经验',
         pinyin: 'jīngyàn',
@@ -130,7 +130,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'kinh nghiệm',
       },
       {
-        id: 'B1-003',
+        id: 'HSK3-003',
         vietnamese: 'thuyết phục',
         chinese: '说服',
         pinyin: 'shuōfú',
@@ -138,7 +138,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'thuyết phục',
       },
       {
-        id: 'B1-004',
+        id: 'HSK3-004',
         vietnamese: 'cải thiện',
         chinese: '改善',
         pinyin: 'gǎishàn',
@@ -146,7 +146,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'cải thiện',
       },
       {
-        id: 'B1-005',
+        id: 'HSK3-005',
         vietnamese: 'thảo luận',
         chinese: '讨论',
         pinyin: 'tǎolùn',
@@ -156,21 +156,21 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
     ],
   },
   {
-    key: 'B2',
-    label: 'B2',
+    key: 'HSK4',
+    label: 'HSK 4',
     wordCount: 5000,
     description: '2 500 mots complémentaires pour atteindre l’autonomie.',
     words: [
       {
-        id: 'B2-001',
+        id: 'HSK4-001',
         vietnamese: 'bền vững',
         chinese: '可持续',
         pinyin: 'kě chíxù',
-        phonetic: 'khở trứ hự',
+        phonetic: 'kh trứ hự',
         hanViet: 'khả trì tục',
       },
       {
-        id: 'B2-002',
+        id: 'HSK4-002',
         vietnamese: 'đổi mới',
         chinese: '创新',
         pinyin: 'chuàngxīn',
@@ -178,7 +178,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'sáng tân',
       },
       {
-        id: 'B2-003',
+        id: 'HSK4-003',
         vietnamese: 'hiệu quả',
         chinese: '效率',
         pinyin: 'xiàolǜ',
@@ -186,7 +186,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'hiệu suất',
       },
       {
-        id: 'B2-004',
+        id: 'HSK4-004',
         vietnamese: 'tự chủ',
         chinese: '自主',
         pinyin: 'zìzhǔ',
@@ -194,7 +194,7 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
         hanViet: 'tự chủ',
       },
       {
-        id: 'B2-005',
+        id: 'HSK4-005',
         vietnamese: 'phức tạp',
         chinese: '复杂',
         pinyin: 'fùzá',
@@ -205,4 +205,4 @@ export const VOCABULARY_BY_LEVEL: LevelBucket[] = [
   },
 ];
 
-export const levelOrder: LevelKey[] = ['A1', 'A2', 'B1', 'B2'];
+export const levelOrder: LevelKey[] = ['HSK1', 'HSK2', 'HSK3', 'HSK4'];

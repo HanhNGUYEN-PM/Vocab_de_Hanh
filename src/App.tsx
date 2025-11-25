@@ -4,6 +4,12 @@ import { LevelKey, VOCABULARY_BY_LEVEL, levelOrder } from './data/vocabulary';
 
 const FAVORITES_STORAGE_KEY = 'chinese-vocab-favorites';
 const LEVEL_STORAGE_KEY = 'chinese-vocab-selected-level';
+const LEGACY_LEVEL_MAP: Record<string, LevelKey> = {
+  A1: 'HSK1',
+  A2: 'HSK2',
+  B1: 'HSK3',
+  B2: 'HSK4',
+};
 
 const getVocabularyPool = (selectedLevel: LevelKey): VocabularyItem[] => {
   const maxIndex = levelOrder.indexOf(selectedLevel);
@@ -11,7 +17,7 @@ const getVocabularyPool = (selectedLevel: LevelKey): VocabularyItem[] => {
 };
 
 const App: React.FC = () => {
-  const [selectedLevel, setSelectedLevel] = useState<LevelKey>('A1');
+  const [selectedLevel, setSelectedLevel] = useState<LevelKey>('HSK1');
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null);
   const [favorites, setFavorites] = useState<VocabularyItem[]>([]);
   const [audioMessage, setAudioMessage] = useState<string | null>(null);
@@ -19,7 +25,7 @@ const App: React.FC = () => {
   useEffect(() => {
     try {
       const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
-      const storedLevel = localStorage.getItem(LEVEL_STORAGE_KEY) as LevelKey | null;
+      const storedLevelRaw = localStorage.getItem(LEVEL_STORAGE_KEY);
 
       if (storedFavorites) {
         const parsedFavorites = JSON.parse(storedFavorites) as VocabularyItem[];
@@ -28,8 +34,14 @@ const App: React.FC = () => {
         }
       }
 
-      if (storedLevel && levelOrder.includes(storedLevel)) {
-        setSelectedLevel(storedLevel);
+      if (storedLevelRaw) {
+        const storedLevel = levelOrder.includes(storedLevelRaw as LevelKey)
+          ? (storedLevelRaw as LevelKey)
+          : LEGACY_LEVEL_MAP[storedLevelRaw];
+
+        if (storedLevel && levelOrder.includes(storedLevel)) {
+          setSelectedLevel(storedLevel);
+        }
       }
     } catch (error) {
       console.error('Impossible de charger les données depuis le stockage local :', error);
@@ -45,6 +57,10 @@ const App: React.FC = () => {
   }, [selectedLevel]);
 
   const vocabularyPool = useMemo(() => getVocabularyPool(selectedLevel), [selectedLevel]);
+  const selectedLevelLabel = useMemo(
+    () => VOCABULARY_BY_LEVEL.find((level) => level.key === selectedLevel)?.label ?? selectedLevel,
+    [selectedLevel],
+  );
 
   const speakWord = useCallback((word: VocabularyItem) => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
@@ -126,7 +142,7 @@ const App: React.FC = () => {
         <section className="bg-slate-50 rounded-2xl shadow p-6 border border-slate-200">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
             <div className="space-y-1">
-              <p className="text-xs text-slate-500">Niveau {selectedLevel}</p>
+              <p className="text-xs text-slate-500">Niveau {selectedLevelLabel}</p>
               <h2 className="text-xl font-bold text-slate-800">{vocabularyPool.length} mots disponibles</h2>
             </div>
             <div className="flex gap-2">
