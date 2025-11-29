@@ -44,7 +44,7 @@ const VocabularyManager: React.FC<VocabularyManagerProps> = ({ vocabulary, onUpd
     }
   };
 
-  const renderCell = (field: keyof VocabularyItem, item: VocabularyItem) => {
+  const renderCell = (field: keyof Omit<VocabularyItem, 'isPlaceholder'>, item: VocabularyItem) => {
     if (editingId === item.id && editedItem) {
       return (
         <input
